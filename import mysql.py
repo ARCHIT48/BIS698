@@ -33,6 +33,12 @@ def enter_app():
         logging.error("Error occurred during sign-in: %s", error)
         messagebox.showerror("Error", "Error occurred during sign-in. Please try again.")
 
+# Function to validate email format
+def validate_email(email):
+    # Regular expression for email validation
+    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    return re.match(pattern, email)
+
 # Function to handle sign-up button
 def userdetails():
     # Create a new window for sign-up
@@ -92,11 +98,6 @@ def userdetails():
 
     dob_calendar_button = tkinter.Button(user_info_frame, text="Calendar", command=select_date)
     dob_calendar_button.grid(row=4, column=2)
-
-    def validate_email(email):
-        # Regular expression for email validation
-        pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
-        return re.match(pattern, email)
 
     # Sign-up button
     btnSignUp = tkinter.Button(frame, width=10, text="Sign Up", command=lambda: add_user(first_name_entry.get(), last_name_entry.get(), email_entry.get(), phone_entry.get(), dob_entry.get()))
@@ -167,8 +168,8 @@ userid_entry.grid(row=0, column=1)
 
 password_label = tkinter.Label(user_info_frame, text="Password:")
 password_label.grid(row=1, column=0)
-                    
-password_entry = tkinter.Entry(user_info_frame, show="*")  # Show asterisks for password entry
+
+password_entry = tkinter.Entry(user_info_frame)
 password_entry.grid(row=1, column=1)
 
 for widget in user_info_frame.winfo_children():
@@ -179,18 +180,16 @@ buttons_frame = tkinter.LabelFrame(frame, text="Buttons")
 buttons_frame.grid(row=3, column=0, sticky="news", padx=20, pady=10)
 
 btnSignIn = tkinter.Button(buttons_frame, width=10, text="Sign-In", command=enter_app)
-btnSignIn.grid(row=0, column=0)
+btnSignIn.grid(row=3, column=0)
 
 btnSignUp = tkinter.Button(buttons_frame, width=10, text="Sign-Up", command=userdetails)
-btnSignUp.grid(row=0, column=1)
+btnSignUp.grid(row=3, column=1)
 
 btnExit = tkinter.Button(buttons_frame, width=10, text="Exit", command=window.destroy)
-btnExit.grid(row=0, column=2)
+btnExit.grid(row=3, column=2)
 
 for widget in buttons_frame.winfo_children():
     widget.grid_configure(padx=10, pady=5)
 
 # Start the main event loop
 window.mainloop()
-
-
