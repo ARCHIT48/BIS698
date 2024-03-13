@@ -3,6 +3,7 @@ from tkinter import messagebox
 import mysql.connector
 import logging
 import re
+from datetime import datetime
 from tkcalendar import Calendar
 
 # Configure logging
@@ -32,12 +33,6 @@ def enter_app():
         print("Error occurred during sign-in:", error)
         logging.error("Error occurred during sign-in: %s", error)
         messagebox.showerror("Error", "Error occurred during sign-in. Please try again.")
-
-# Function to validate email format
-def validate_email(email):
-    # Regular expression for email validation
-    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
-    return re.match(pattern, email)
 
 # Function to handle sign-up button
 def userdetails():
@@ -99,32 +94,46 @@ def userdetails():
     dob_calendar_button = tkinter.Button(user_info_frame, text="Calendar", command=select_date)
     dob_calendar_button.grid(row=4, column=2)
 
+    def validate_email(email):
+        # Regular expression for email validation
+        pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        return re.match(pattern, email)
+
+    # Function to add a new user to the database
+    def add_user():
+        first_name = first_name_entry.get()
+        last_name = last_name_entry.get()
+        email = email_entry.get()
+        phone = phone_entry.get()
+        dob = dob_entry.get()
+
+        # Validate email format
+        if not validate_email(email):
+            messagebox.showerror("Error", "Invalid email format. Please enter a valid email.")
+            return
+
+        # Convert dob to the desired format 'YYYY-MM-DD'
+        dob_formatted = datetime.strptime(dob, "%m/%d/%y").strftime("%Y-%m-%d")
+
+        try:
+            cursor = connection.cursor()
+            cursor.execute("INSERT INTO Customer (First_Name, Last_Name, Email_ID, Phone_No, Date_of_Birth, User_Acc_ID) VALUES (%s, %s, %s, %s, %s, %s)", (first_name, last_name, email, phone, dob_formatted, None))
+            connection.commit()
+            print("User added successfully.")
+            logging.info("New user added to the database.")
+            messagebox.showinfo("Success", "User added successfully.")
+        except mysql.connector.Error as error:
+            print("Error occurred while adding user:", error)
+            logging.error("Error occurred while adding user: %s", error)
+            messagebox.showerror("Error", "Error occurred while adding user. Please try again.")
+
     # Sign-up button
-    btnSignUp = tkinter.Button(frame, width=10, text="Sign Up", command=lambda: add_user(first_name_entry.get(), last_name_entry.get(), email_entry.get(), phone_entry.get(), dob_entry.get()))
+    btnSignUp = tkinter.Button(frame, width=10, text="Sign Up", command=add_user)
     btnSignUp.grid(row=1, column=0, padx=20, pady=10)
 
     # Cancel button
     btnCancel = tkinter.Button(frame, width=10, text="Cancel", command=signup_window.destroy)
     btnCancel.grid(row=1, column=1, padx=20, pady=10)
-
-# Function to add a new user to the database
-def add_user(first_name, last_name, email, phone, dob):
-    # Validate email format
-    if not validate_email(email):
-        messagebox.showerror("Error", "Invalid email format. Please enter a valid email.")
-        return
-
-    try:
-        cursor = connection.cursor()
-        cursor.execute("INSERT INTO Customer (First_Name, Last_Name, Email_ID, Phone_No, Date_of_Birth, User_Acc_ID) VALUES (%s, %s, %s, %s, %s, %s)", (first_name, last_name, email, phone, dob, None))
-        connection.commit()
-        print("User added successfully.")
-        logging.info("New user added to the database.")
-        messagebox.showinfo("Success", "User added successfully.")
-    except mysql.connector.Error as error:
-        print("Error occurred while adding user:", error)
-        logging.error("Error occurred while adding user: %s", error)
-        messagebox.showerror("Error", "Error occurred while adding user. Please try again.")
 
 try:
     # Replace '141.209.241.81', 'bis698_S24_w200', 'grp2w200', and 'passinit' with your actual database details
