@@ -4,7 +4,7 @@ import mysql.connector
 import logging
 import re
 from datetime import datetime
-from tkcalendar import Calendar
+from tkcalendar import Calendar  # Importing the Calendar widget
 
 # Configure logging
 logging.basicConfig(filename='app.log', level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -78,15 +78,27 @@ def userdetails():
     dob_entry = tkinter.Entry(user_info_frame)
     dob_entry.grid(row=4, column=1)
 
+    user_id_label = tkinter.Label(user_info_frame, text="User ID:")
+    user_id_label.grid(row=5, column=0)
+
+    user_id_entry = tkinter.Entry(user_info_frame)
+    user_id_entry.grid(row=5, column=1)
+
+    password_label = tkinter.Label(user_info_frame, text="Password:")
+    password_label.grid(row=6, column=0)
+
+    password_entry = tkinter.Entry(user_info_frame)
+    password_entry.grid(row=6, column=1)
+
     # Calendar button for selecting DOB
     def select_date():
-        cal = Calendar(signup_window, selectmode="day", year=2024, month=3, day=13)
+        cal = Calendar(signup_window, selectmode="day", year=2024, month=3, day=13)  # Creating a Calendar widget
         cal.pack()
 
         def set_date():
             dob_entry.delete(0, tkinter.END)
-            dob_entry.insert(0, cal.get_date())
-            cal.pack_forget()
+            dob_entry.insert(0, cal.get_date())  # Set the selected date in the dob_entry field
+            cal.pack_forget()  # Remove the Calendar widget after selection
 
         select_button = tkinter.Button(signup_window, text="Select", command=set_date)
         select_button.pack()
@@ -106,13 +118,13 @@ def userdetails():
         email = email_entry.get()
         phone = phone_entry.get()
         dob = dob_entry.get()
+        user_id = user_id_entry.get()
+        password = password_entry.get()
 
-        # Validate email format
         if not validate_email(email):
             messagebox.showerror("Error", "Invalid email format. Please enter a valid email.")
             return
 
-        # Convert dob to the desired format 'YYYY-MM-DD'
         dob_formatted = datetime.strptime(dob, "%m/%d/%y").strftime("%Y-%m-%d")
 
         try:
@@ -122,6 +134,11 @@ def userdetails():
             print("User added successfully.")
             logging.info("New user added to the database.")
             messagebox.showinfo("Success", "User added successfully.")
+
+            # Insert user account details into User_Account table
+            cursor.execute("INSERT INTO User_Account (User_ID, Password) VALUES (%s, %s)", (user_id, password))
+            connection.commit()
+            print("User account details added successfully.")
         except mysql.connector.Error as error:
             print("Error occurred while adding user:", error)
             logging.error("Error occurred while adding user: %s", error)
@@ -129,11 +146,11 @@ def userdetails():
 
     # Sign-up button
     btnSignUp = tkinter.Button(frame, width=10, text="Sign Up", command=add_user)
-    btnSignUp.grid(row=1, column=0, padx=20, pady=10)
+    btnSignUp.grid(row=7, column=0, padx=20, pady=10)
 
     # Cancel button
     btnCancel = tkinter.Button(frame, width=10, text="Cancel", command=signup_window.destroy)
-    btnCancel.grid(row=1, column=1, padx=20, pady=10)
+    btnCancel.grid(row=7, column=1, padx=20, pady=10)
 
 try:
     # Replace '141.209.241.81', 'bis698_S24_w200', 'grp2w200', and 'passinit' with your actual database details
@@ -202,3 +219,5 @@ for widget in buttons_frame.winfo_children():
 
 # Start the main event loop
 window.mainloop()
+
+
