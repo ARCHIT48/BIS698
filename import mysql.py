@@ -6,6 +6,9 @@ import re
 from datetime import datetime
 from tkcalendar import Calendar  # Importing the Calendar widget
 
+# Define the connection variable in the global scope
+connection = None
+
 # Configure logging
 logging.basicConfig(filename='app.log', level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -78,6 +81,21 @@ def userdetails():
     dob_entry = tkinter.Entry(user_info_frame)
     dob_entry.grid(row=4, column=1)
 
+    # Function to set the selected date in the Date of Birth entry
+    def set_date():
+        dob_entry.delete(0, tkinter.END)
+        dob_entry.insert(0, cal.get_date())
+
+    # Calendar button for selecting DOB
+    def show_calendar():
+        cal_window = tkinter.Toplevel(signup_window)
+        cal_window.title("Select Date of Birth")
+        cal = Calendar(cal_window, selectmode="day", date_pattern="MM/DD/YYYY")
+        cal.pack()
+
+    cal_button = tkinter.Button(user_info_frame, text="Calendar", command=show_calendar)
+    cal_button.grid(row=4, column=2)
+
     user_id_label = tkinter.Label(user_info_frame, text="User ID:")
     user_id_label.grid(row=5, column=0)
 
@@ -87,24 +105,14 @@ def userdetails():
     password_label = tkinter.Label(user_info_frame, text="Password:")
     password_label.grid(row=6, column=0)
 
-    password_entry = tkinter.Entry(user_info_frame)
+    password_entry = tkinter.Entry(user_info_frame, show="*")  # Passwords are shown as asterisks
     password_entry.grid(row=6, column=1)
 
-    # Calendar button for selecting DOB
-    def select_date():
-        cal = Calendar(signup_window, selectmode="day", year=2024, month=3, day=13)  # Creating a Calendar widget
-        cal.pack()
+    retype_password_label = tkinter.Label(user_info_frame, text="Retype Password:")
+    retype_password_label.grid(row=7, column=0)
 
-        def set_date():
-            dob_entry.delete(0, tkinter.END)
-            dob_entry.insert(0, cal.get_date())  # Set the selected date in the dob_entry field
-            cal.pack_forget()  # Remove the Calendar widget after selection
-
-        select_button = tkinter.Button(signup_window, text="Select", command=set_date)
-        select_button.pack()
-
-    dob_calendar_button = tkinter.Button(user_info_frame, text="Calendar", command=select_date)
-    dob_calendar_button.grid(row=4, column=2)
+    retype_password_entry = tkinter.Entry(user_info_frame, show="*")
+    retype_password_entry.grid(row=7, column=1)
 
     def validate_email(email):
         # Regular expression for email validation
@@ -120,25 +128,60 @@ def userdetails():
         dob = dob_entry.get()
         user_id = user_id_entry.get()
         password = password_entry.get()
+        retype_password = retype_password_entry.get()
 
+        # Validate email format
         if not validate_email(email):
             messagebox.showerror("Error", "Invalid email format. Please enter a valid email.")
             return
 
-        dob_formatted = datetime.strptime(dob, "%m/%d/%y").strftime("%Y-%m-%d")
+        # Validate phone number length
+        if len(phone) != 10:
+            messagebox.showerror("Error", "Phone number should be 10 digits.")
+            return
 
+        # Validate date format
+        try:
+            dob_formatted = datetime.strptime(dob, "%m/%d/%Y").strftime("%Y-%m-%d")
+        except ValueError:
+            messagebox.showerror("Error", "Invalid date format. Please use MM/DD/YYYY.")
+            return
+
+        # Validate age
+        today = datetime.today()
+        dob_datetime = datetime.strptime(dob, "%m/%d/%Y")
+        age = today.year - dob_datetime.year - ((today.month, today.day) < (dob_datetime.month, dob_datetime.day))
+        if age < 18:
+            messagebox.showerror("Error", "You must be at least 18 years old to sign up.")
+            return
+
+        # Validate password match
+        if password != retype_password:
+            messagebox.showerror("Error", "Passwords do not match. Please retype password correctly.")
+            return
+
+        # Check if User ID is unique
         try:
             cursor = connection.cursor()
+            cursor.execute("SELECT User_ID FROM User_Account WHERE User_ID = %s", (user_id,))
+            existing_user = cursor.fetchone()
+            if existing_user:
+                messagebox.showerror("Error", "User ID already exists. Please choose a different one.")
+                return
+        except mysql.connector.Error as error:
+            print("Error occurred while checking user ID:", error)
+            logging.error("Error occurred while checking user ID: %s", error)
+            messagebox.showerror("Error", "Error occurred while checking user ID. Please try again.")
+            return
+
+        try:
             cursor.execute("INSERT INTO Customer (First_Name, Last_Name, Email_ID, Phone_No, Date_of_Birth, User_Acc_ID) VALUES (%s, %s, %s, %s, %s, %s)", (first_name, last_name, email, phone, dob_formatted, None))
+            connection.commit()
+            cursor.execute("INSERT INTO User_Account (User_ID, Password) VALUES (%s, %s)", (user_id, password))
             connection.commit()
             print("User added successfully.")
             logging.info("New user added to the database.")
             messagebox.showinfo("Success", "User added successfully.")
-
-            # Insert user account details into User_Account table
-            cursor.execute("INSERT INTO User_Account (User_ID, Password) VALUES (%s, %s)", (user_id, password))
-            connection.commit()
-            print("User account details added successfully.")
         except mysql.connector.Error as error:
             print("Error occurred while adding user:", error)
             logging.error("Error occurred while adding user: %s", error)
@@ -146,11 +189,11 @@ def userdetails():
 
     # Sign-up button
     btnSignUp = tkinter.Button(frame, width=10, text="Sign Up", command=add_user)
-    btnSignUp.grid(row=7, column=0, padx=20, pady=10)
+    btnSignUp.grid(row=1, column=0, padx=20, pady=10)
 
     # Cancel button
     btnCancel = tkinter.Button(frame, width=10, text="Cancel", command=signup_window.destroy)
-    btnCancel.grid(row=7, column=1, padx=20, pady=10)
+    btnCancel.grid(row=1, column=1, padx=20, pady=10)
 
 try:
     # Replace '141.209.241.81', 'bis698_S24_w200', 'grp2w200', and 'passinit' with your actual database details
@@ -195,7 +238,7 @@ userid_entry.grid(row=0, column=1)
 password_label = tkinter.Label(user_info_frame, text="Password:")
 password_label.grid(row=1, column=0)
 
-password_entry = tkinter.Entry(user_info_frame)
+password_entry = tkinter.Entry(user_info_frame, show="*")  # Passwords are shown as asterisks
 password_entry.grid(row=1, column=1)
 
 for widget in user_info_frame.winfo_children():
@@ -219,5 +262,3 @@ for widget in buttons_frame.winfo_children():
 
 # Start the main event loop
 window.mainloop()
-
-
