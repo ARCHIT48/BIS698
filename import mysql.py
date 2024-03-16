@@ -26,7 +26,6 @@ def enter_app():
             # Authentication successful, proceed with application
             print("Authentication successful. Entering app.")
             # Implement your application logic here
-            
         else:
             print("Invalid credentials. Please try again.")
             logging.warning("Invalid sign-in attempt with user ID: %s", user_id)
@@ -88,10 +87,17 @@ def userdetails():
 
     # Calendar button for selecting DOB
     def show_calendar():
+        def on_date_select():
+            dob_entry.delete(0, tkinter.END)
+            dob_entry.insert(0, cal.get_date())
+            cal_window.destroy()
+
         cal_window = tkinter.Toplevel(signup_window)
         cal_window.title("Select Date of Birth")
         cal = Calendar(cal_window, selectmode="day", date_pattern="MM/DD/YYYY")
         cal.pack()
+        select_button = tkinter.Button(cal_window, text="Select", command=on_date_select)
+        select_button.pack()
 
     cal_button = tkinter.Button(user_info_frame, text="Calendar", command=show_calendar)
     cal_button.grid(row=4, column=2)
@@ -182,6 +188,7 @@ def userdetails():
             print("User added successfully.")
             logging.info("New user added to the database.")
             messagebox.showinfo("Success", "User added successfully.")
+            signup_window.destroy()  # Close the sign-up window after successful registration
         except mysql.connector.Error as error:
             print("Error occurred while adding user:", error)
             logging.error("Error occurred while adding user: %s", error)
