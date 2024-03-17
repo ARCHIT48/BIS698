@@ -12,29 +12,31 @@ connection = None
 # Configure logging
 logging.basicConfig(filename='app.log', level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
+
 # Function to handle sign-in button
 def enter_app():
     user_id = userid_entry.get()
     password = password_entry.get()
-    
+
     try:
         cursor = connection.cursor()
         cursor.execute("SELECT * FROM User_Account WHERE User_ID = %s AND Password = %s", (user_id, password))
         user_account = cursor.fetchone()
-        
+
         if user_account:
-            # Authentication successful, proceed with application
+            # Authentication successful, open order cart screen
             print("Authentication successful. Entering app.")
-            # Implement your application logic here
+            order_cart_screen()  # Open order cart screen
         else:
             print("Invalid credentials. Please try again.")
             logging.warning("Invalid sign-in attempt with user ID: %s", user_id)
             messagebox.showerror("Error", "Invalid credentials. Please try again.")
-    
+
     except mysql.connector.Error as error:
         print("Error occurred during sign-in:", error)
         logging.error("Error occurred during sign-in: %s", error)
         messagebox.showerror("Error", "Error occurred during sign-in. Please try again.")
+
 
 # Function to handle sign-up button
 def userdetails():
@@ -202,10 +204,25 @@ def userdetails():
     btnCancel = tkinter.Button(frame, width=10, text="Cancel", command=signup_window.destroy)
     btnCancel.grid(row=1, column=1, padx=20, pady=10)
 
+
+# Function to create the order cart screen
+def order_cart_screen():
+    # Create a new window for the order cart screen
+    order_cart_window = tkinter.Toplevel(window)
+    order_cart_window.title("Order Cart")
+
+    # Create a frame to organize widgets
+    frame = tkinter.Frame(order_cart_window)
+    frame.pack()
+
+    # Add widgets for the order cart screen
+    # (You can add labels, entry fields, buttons, etc. to allow users to interact with their order)
+
+
 try:
     # Replace '141.209.241.81', 'bis698_S24_w200', 'grp2w200', and 'passinit' with your actual database details
     connection = mysql.connector.connect(
-        host='141.209.241.81',       # Or your database server IP
+        host='141.209.241.81',  # Or your database server IP
         database='bis698_S24_w200',
         user='grp2w200',
         password='passinit'
