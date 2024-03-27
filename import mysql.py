@@ -1,5 +1,6 @@
 import tkinter
-from tkinter import messagebox, ttk
+from tkinter import ttk
+from tkinter import messagebox
 import mysql.connector
 import logging
 import re
@@ -11,6 +12,7 @@ from tkcalendar import Calendar
 connection = None
 order_cart_window = None
 cart_items = []
+total_price = 0
 
 # Configure logging
 logging.basicConfig(filename='app.log', level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -46,7 +48,7 @@ def clear_signin_entries():
     userid_entry.delete(0, tkinter.END)
     password_entry.delete(0, tkinter.END)
 
-# Function to handle sign-up button
+
 def userdetails():
     # Create a new window for sign-up
     signup_window = tkinter.Toplevel(window)
@@ -90,6 +92,24 @@ def userdetails():
     dob_entry = tkinter.Entry(user_info_frame)
     dob_entry.grid(row=4, column=1)
 
+    # Add a Combobox for selecting states
+    state_label = tkinter.Label(user_info_frame, text="State:")
+    state_label.grid(row=5, column=0)
+
+    # List of US states
+    us_states = [
+        "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut", "Delaware",
+        "Florida", "Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa", "Kansas", "Kentucky",
+        "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan", "Minnesota", "Mississippi",
+        "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire", "New Jersey", "New Mexico",
+        "New York", "North Carolina", "North Dakota", "Ohio", "Oklahoma", "Oregon", "Pennsylvania",
+        "Rhode Island", "South Carolina", "South Dakota", "Tennessee", "Texas", "Utah", "Vermont",
+        "Virginia", "Washington", "West Virginia", "Wisconsin", "Wyoming"
+    ]
+
+    state_combobox = ttk.Combobox(user_info_frame, values=us_states, state="readonly")
+    state_combobox.grid(row=5, column=1)
+
     # Function to set the selected date in the Date of Birth entry
     def set_date():
         dob_entry.delete(0, tkinter.END)
@@ -113,22 +133,22 @@ def userdetails():
     cal_button.grid(row=4, column=2)
 
     user_id_label = tkinter.Label(user_info_frame, text="User ID:")
-    user_id_label.grid(row=5, column=0)
+    user_id_label.grid(row=6, column=0)
 
     user_id_entry = tkinter.Entry(user_info_frame)
-    user_id_entry.grid(row=5, column=1)
+    user_id_entry.grid(row=6, column=1)
 
     password_label = tkinter.Label(user_info_frame, text="Password:")
-    password_label.grid(row=6, column=0)
+    password_label.grid(row=7, column=0)
 
     password_entry = tkinter.Entry(user_info_frame, show="*")  # Passwords are shown as asterisks
-    password_entry.grid(row=6, column=1)
+    password_entry.grid(row=7, column=1)
 
     retype_password_label = tkinter.Label(user_info_frame, text="Retype Password:")
-    retype_password_label.grid(row=7, column=0)
+    retype_password_label.grid(row=8, column=0)
 
     retype_password_entry = tkinter.Entry(user_info_frame, show="*")
-    retype_password_entry.grid(row=7, column=1)
+    retype_password_entry.grid(row=8, column=1)
 
     def validate_email(email):
         # Regular expression for email validation
@@ -142,6 +162,7 @@ def userdetails():
         email = email_entry.get()
         phone = phone_entry.get()
         dob = dob_entry.get()
+        state = state_combobox.get()  # Get selected state
         user_id = user_id_entry.get()
         password = password_entry.get()
         retype_password = retype_password_entry.get()
@@ -192,8 +213,8 @@ def userdetails():
 
         try:
             cursor.execute(
-                "INSERT INTO Customer (First_Name, Last_Name, Email_ID, Phone_No, Date_of_Birth, User_Acc_ID) VALUES (%s, %s, %s, %s, %s, %s)",
-                (first_name, last_name, email, phone, dob_formatted, None))
+                "INSERT INTO Customer (First_Name, Last_Name, Email_ID, Phone_No, Date_of_Birth, State, User_Acc_ID) VALUES (%s, %s, %s, %s, %s, %s, %s)",
+                (first_name, last_name, email, phone, dob_formatted, state, None))
             connection.commit()
             cursor.execute("INSERT INTO User_Account (User_ID, Password) VALUES (%s, %s)", (user_id, password))
             connection.commit()
@@ -265,6 +286,10 @@ def order_cart_screen():
     view_cart_button = tkinter.Button(frame, text="View Cart", command=view_cart)
     view_cart_button.pack(pady=10)
 
+    # Place order button
+    place_order_button = tkinter.Button(frame, text="Place Order", command=place_order)
+    place_order_button.pack(pady=10)
+
     # Product Search
     search_label = tkinter.Label(frame, text="Search Product:")
     search_label.pack()
@@ -293,7 +318,6 @@ def order_cart_screen():
     # Recommendation
     recommend_button = tkinter.Button(frame, text="Recommendations", command=show_recommendations)
     recommend_button.pack()
-
 
 # Function to search for a product
 def search_product(keyword):
@@ -374,17 +398,22 @@ def show_recommendations():
 
 # Function to add a product to the cart
 def add_to_cart(product_id, description, price, quantity_combobox):
-    global cart_items
+    global cart_items, total_price
 
     # Extract the selected quantity from the Combobox
     quantity = int(quantity_combobox.get())
 
+    # Calculate the total price of the added item
+    item_price = price * quantity
+
     # Add the item to the cart_items list
     cart_items.append((product_id, description, price, quantity))
 
+    # Update the total price
+    total_price += item_price
+
     # Show success message
     messagebox.showinfo("Success", "Product added to cart.")
-
 
 # Function to view the cart
 def view_cart():
@@ -427,6 +456,7 @@ def view_cart():
 
     def checkout():
         global cart_items
+
         # Close the current cart window
         cart_window.destroy()
 
@@ -443,18 +473,18 @@ def view_cart():
             # US zip code pattern: 5 digits or 5 digits followed by a hyphen and 4 digits
             pattern = r'^\d{5}(?:-\d{4})?$'
             return re.match(pattern, zip_code)
-        
+
         # Name field
         name_label = tkinter.Label(frame, text="Name:")
-        name_label.grid(row=5, column=0, padx=10, pady=5)
+        name_label.grid(row=0, column=0, padx=10, pady=5)
         name_entry = tkinter.Entry(frame)
-        name_entry.grid(row=5, column=1, padx=10, pady=5)
+        name_entry.grid(row=0, column=1, padx=10, pady=5)
 
         # Delivery address fields
         street_label = tkinter.Label(frame, text="Street:")
-        street_label.grid(row=0, column=0, padx=10, pady=5)
+        street_label.grid(row=1, column=0, padx=10, pady=5)
         street_entry = tkinter.Entry(frame)
-        street_entry.grid(row=0, column=1, padx=10, pady=5)
+        street_entry.grid(row=1, column=1, padx=10, pady=5)
 
         zip_label = tkinter.Label(frame, text="Zip Code:")
         zip_label.grid(row=2, column=0, padx=10, pady=5)
@@ -468,14 +498,25 @@ def view_cart():
 
         state_label = tkinter.Label(frame, text="State:")
         state_label.grid(row=4, column=0, padx=10, pady=5)
-        state_entry = tkinter.Entry(frame)
-        state_entry.grid(row=4, column=1, padx=10, pady=5)
+
+        # Dropdown menu for selecting states
+        us_states = [
+            "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut", "Delaware",
+            "Florida", "Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa", "Kansas", "Kentucky",
+            "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan", "Minnesota", "Mississippi",
+            "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire", "New Jersey", "New Mexico",
+            "New York", "North Carolina", "North Dakota", "Ohio", "Oklahoma", "Oregon", "Pennsylvania",
+            "Rhode Island", "South Carolina", "South Dakota", "Tennessee", "Texas", "Utah", "Vermont",
+            "Virginia", "Washington", "West Virginia", "Wisconsin", "Wyoming"
+        ]
+        state_combobox = ttk.Combobox(frame, values=us_states, state="readonly")
+        state_combobox.grid(row=4, column=1, padx=10, pady=5)
 
         # Phone number field
         phone_label = tkinter.Label(frame, text="Phone Number:")
-        phone_label.grid(row=6, column=0, padx=10, pady=5)
+        phone_label.grid(row=5, column=0, padx=10, pady=5)
         phone_entry = tkinter.Entry(frame)
-        phone_entry.grid(row=6, column=1, padx=10, pady=5)
+        phone_entry.grid(row=5, column=1, padx=10, pady=5)
 
         # Payment processing (simulate with a button)
         def process_payment():
@@ -483,7 +524,7 @@ def view_cart():
             street = street_entry.get()
             zip_code = zip_entry.get()
             city = city_entry.get()
-            state = state_entry.get()
+            state = state_combobox.get()  # Get selected state
             name = name_entry.get()
             phone_number = phone_entry.get()
 
@@ -516,7 +557,7 @@ def view_cart():
 
         # Payment button
         payment_button = tkinter.Button(frame, text="Process Payment", command=process_payment)
-        payment_button.grid(row=7, columnspan=2, padx=10, pady=10)
+        payment_button.grid(row=6, columnspan=2, padx=10, pady=10)
 
     cart_window = tkinter.Toplevel(order_cart_window)
     cart_window.title("View Cart")
@@ -634,4 +675,3 @@ for widget in buttons_frame.winfo_children():
 
 # Start the main event loop
 window.mainloop()
-
