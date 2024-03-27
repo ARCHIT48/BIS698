@@ -11,7 +11,6 @@ connection = None
 order_cart_window = None
 cart_items = []
 
-
 # Configure logging
 logging.basicConfig(filename='app.log', level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -41,12 +40,10 @@ def enter_app():
         logging.error("Error occurred during sign-in: %s", error)
         messagebox.showerror("Error", "Error occurred during sign-in. Please try again.")
 
-
 # Function to clear sign-in entries
 def clear_signin_entries():
     userid_entry.delete(0, tkinter.END)
     password_entry.delete(0, tkinter.END)
-
 
 # Function to handle sign-up button
 def userdetails():
@@ -267,13 +264,118 @@ def order_cart_screen():
     view_cart_button = tkinter.Button(frame, text="View Cart", command=view_cart)
     view_cart_button.pack(pady=10)
 
+    # Product Search
+    search_label = tkinter.Label(frame, text="Search Product:")
+    search_label.pack()
+    search_entry = tkinter.Entry(frame)
+    search_entry.pack()
+    search_button = tkinter.Button(frame, text="Search", command=lambda: search_product(search_entry.get()))
+    search_button.pack()
+
+    # Product Filter
+    filter_label = tkinter.Label(frame, text="Filter by:")
+    filter_label.pack()
+
+    price_range_label = tkinter.Label(frame, text="Price Range:")
+    price_range_label.pack()
+
+    price_from_entry = tkinter.Entry(frame)
+    price_from_entry.pack()
+
+    price_to_entry = tkinter.Entry(frame)
+    price_to_entry.pack()
+
+    filter_button = tkinter.Button(frame, text="Apply Filter",
+                                   command=lambda: filter_products(price_from_entry.get(), price_to_entry.get()))
+    filter_button.pack()
+
+    # Recommendation
+    recommend_button = tkinter.Button(frame, text="Recommendations", command=show_recommendations)
+    recommend_button.pack()
+
+
+# Function to search for a product
+def search_product(keyword):
+    global order_cart_window
+    if not keyword:
+        messagebox.showerror("Error", "Please enter a search keyword.")
+        return
+
+    try:
+        cursor = connection.cursor()
+        cursor.execute("SELECT Product_ID, Description, Price FROM Product WHERE Description LIKE %s",
+                       ('%' + keyword + '%',))
+        products = cursor.fetchall()
+        connection.commit()
+
+        if not products:
+            messagebox.showinfo("Info", "No products found matching the search criteria.")
+        else:
+            search_result_window = tkinter.Toplevel(order_cart_window)
+            search_result_window.title("Search Results")
+
+            frame = tkinter.Frame(search_result_window)
+            frame.pack()
+
+            title_label = tkinter.Label(frame, text="Search Results", font=("Helvetica", 16))
+            title_label.pack(pady=10)
+
+            for product in products:
+                product_label = tkinter.Label(frame, text=f"{product[1]} - ${product[2]}")
+                product_label.pack()
+
+    except mysql.connector.Error as error:
+        print("Error occurred while searching for products:", error)
+        logging.error("Error occurred while searching for products: %s", error)
+        messagebox.showerror("Error", "Error occurred while searching for products. Please try again.")
+
+
+# Function to filter products by price range
+def filter_products(min_price, max_price):
+    global order_cart_window
+    if not min_price or not max_price:
+        messagebox.showerror("Error", "Please enter both minimum and maximum price.")
+        return
+
+    try:
+        cursor = connection.cursor()
+        cursor.execute("SELECT Product_ID, Description, Price FROM Product WHERE Price BETWEEN %s AND %s",
+                       (min_price, max_price))
+        products = cursor.fetchall()
+        connection.commit()
+
+        if not products:
+            messagebox.showinfo("Info", "No products found within the specified price range.")
+        else:
+            filter_result_window = tkinter.Toplevel(order_cart_window)
+            filter_result_window.title("Filtered Results")
+
+            frame = tkinter.Frame(filter_result_window)
+            frame.pack()
+
+            title_label = tkinter.Label(frame, text="Filtered Results", font=("Helvetica", 16))
+            title_label.pack(pady=10)
+
+            for product in products:
+                product_label = tkinter.Label(frame, text=f"{product[1]} - ${product[2]}")
+                product_label.pack()
+
+    except mysql.connector.Error as error:
+        print("Error occurred while filtering products:", error)
+        logging.error("Error occurred while filtering products: %s", error)
+        messagebox.showerror("Error", "Error occurred while filtering         products: %s", error)
+
+
+# Function to show product recommendations
+def show_recommendations():
+    # Implement logic to fetch and display product recommendations based on user behavior
+    messagebox.showinfo("Recommendations", "Here are some recommended products based on your activity.")
 
 # Function to add a product to the cart
 def add_to_cart(product_id, description, price, quantity):
     global cart_items
     cart_items.append((product_id, description, price, quantity))
     messagebox.showinfo("Success", "Product added to cart.")
-
 
 # Function to view the cart
 def view_cart():
@@ -302,7 +404,6 @@ def view_cart():
         total_label = tkinter.Label(frame, text=f"Total: ${total_price}")
         total_label.pack(pady=10)
 
-
 # Function to place an order
 def place_order():
     # Implement the logic to place an order here
@@ -312,7 +413,6 @@ def place_order():
     cart_items.clear()
     # Close the order cart window after placing the order
     order_cart_window.destroy()
-
 
 try:
     # Replace '141.209.241.81', 'bis698_S24_w200', 'grp2w200', and 'passinit' with your actual database details
@@ -381,3 +481,5 @@ for widget in buttons_frame.winfo_children():
 
 # Start the main event loop
 window.mainloop()
+
+
