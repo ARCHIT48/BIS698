@@ -242,14 +242,29 @@ def order_cart_screen():
     order_cart_window = tkinter.Toplevel(window)
     order_cart_window.title("Order Cart")
 
+    # Set background color to light green
+    order_cart_window.configure(bg="#e6ffe6")
+
+    # Make the window fullscreen
+    width = order_cart_window.winfo_screenwidth()
+    height = order_cart_window.winfo_screenheight()
+    order_cart_window.geometry(f"{width}x{height}+0+0")
+
     # Create a frame to organize widgets
-    frame = tkinter.Frame(order_cart_window)
-    frame.pack()
+    frame = tkinter.Frame(order_cart_window, bg="#e6ffe6")  # Set frame background color
+    frame.pack(fill=tkinter.BOTH, expand=True)
 
     # Add widgets for the order cart screen
     # Label for the title
-    title_label = tkinter.Label(frame, text="Order Cart", font=("Helvetica", 16))
-    title_label.pack(pady=10)
+    title_label = tkinter.Label(frame, text="Order Cart", font=("Helvetica", 24, "bold"), bg="#e6ffe6")  # Set label background color
+    title_label.pack(pady=20)
+
+    # Products section
+    products_frame = tkinter.Frame(frame, bg="#e6ffe6")  # Set frame background color
+    products_frame.pack(side=tkinter.LEFT, padx=20, pady=10, fill=tkinter.BOTH, expand=True)
+
+    products_label = tkinter.Label(products_frame, text="Products", font=("Helvetica", 16, "bold"), bg="#e6ffe6")  # Set label background color
+    products_label.pack()
 
     # Fetch products from the database
     try:
@@ -260,64 +275,70 @@ def order_cart_screen():
 
         # Display products in a list format
         for product in products:
-            product_label = tkinter.Label(frame, text=f"{product[1]} - ${product[2]}")
+            product_label = tkinter.Label(products_frame, text=f"{product[1]} - ${product[2]}", bg="#e6ffe6", font=("Helvetica", 12))  # Set label background color and font
             product_label.pack()
 
-            quantity_label = tkinter.Label(frame, text="Quantity:")
-            quantity_label.pack()
-
-            # Combobox for selecting quantity
-            quantity_combobox = ttk.Combobox(frame, values=[i for i in range(1, 6)], state="readonly")
+            quantity_combobox = ttk.Combobox(products_frame, values=[i for i in range(1, 6)], state="readonly", width=5, font=("Helvetica", 10))  # Set combobox width and font
             quantity_combobox.pack()
 
-            # Button to add the product to cart
-            add_to_cart_button = tkinter.Button(frame, text="Add to Cart",
+            add_to_cart_button = tkinter.Button(products_frame, text="Add to Cart", bg="#99ff99", font=("Helvetica", 10, "bold"),  # Set button background color and font
                                                  command=lambda p_id=product[0], desc=product[1],
                                                                 price=product[2], qty=quantity_combobox: add_to_cart(
                                                      p_id, desc, price, qty))
-            add_to_cart_button.pack()
+            add_to_cart_button.pack(pady=5)
 
     except mysql.connector.Error as error:
         print("Error occurred while fetching products:", error)
         logging.error("Error occurred while fetching products: %s", error)
         messagebox.showerror("Error", "Error occurred while fetching products. Please try again.")
 
-    # Button to view cart
-    view_cart_button = tkinter.Button(frame, text="View Cart", command=view_cart)
-    view_cart_button.pack(pady=10)
+    # Filter section
+    filter_frame = tkinter.Frame(frame, bg="#e6ffe6")  # Set frame background color
+    filter_frame.pack(side=tkinter.RIGHT, padx=20, pady=10, fill=tkinter.BOTH, expand=True)
 
-    # Place order button
-    place_order_button = tkinter.Button(frame, text="Place Order", command=place_order)
-    place_order_button.pack(pady=10)
+    filter_label = tkinter.Label(filter_frame, text="Filter", font=("Helvetica", 16, "bold"), bg="#e6ffe6")  # Set label background color
+    filter_label.pack()
 
     # Product Search
-    search_label = tkinter.Label(frame, text="Search Product:")
+    search_label = tkinter.Label(filter_frame, text="Search Product:", bg="#e6ffe6", font=("Helvetica", 12))  # Set label background color and font
     search_label.pack()
-    search_entry = tkinter.Entry(frame)
+    search_entry = tkinter.Entry(filter_frame, width=20, font=("Helvetica", 10))  # Set entry width and font
     search_entry.pack()
-    search_button = tkinter.Button(frame, text="Search", command=lambda: search_product(search_entry.get()))
+    search_button = tkinter.Button(filter_frame, text="Search", bg="#99ff99", font=("Helvetica", 10, "bold"),  # Set button background color and font
+                                   command=lambda: search_product(search_entry.get()))
     search_button.pack()
 
     # Product Filter
-    filter_label = tkinter.Label(frame, text="Filter by:")
-    filter_label.pack()
-
-    price_range_label = tkinter.Label(frame, text="Price Range:")
+    price_range_label = tkinter.Label(filter_frame, text="Price Range:", bg="#e6ffe6", font=("Helvetica", 12))  # Set label background color and font
     price_range_label.pack()
 
-    price_from_entry = tkinter.Entry(frame)
-    price_from_entry.pack()
+    # Frame to organize minimum and maximum price fields
+    price_entry_frame = tkinter.Frame(filter_frame, bg="#e6ffe6")
+    price_entry_frame.pack()
 
-    price_to_entry = tkinter.Entry(frame)
-    price_to_entry.pack()
+    # Minimum price entry
+    min_price_label = tkinter.Label(price_entry_frame, text="Min:", bg="#e6ffe6", font=("Helvetica", 10))  # Set label background color and font
+    min_price_label.pack(side=tkinter.LEFT)
+    price_from_entry = tkinter.Entry(price_entry_frame, width=10, font=("Helvetica", 10))  # Set entry width and font
+    price_from_entry.pack(side=tkinter.LEFT, padx=(0, 5))
 
-    filter_button = tkinter.Button(frame, text="Apply Filter",
-                                   command=lambda: filter_products(price_from_entry.get(), price_to_entry.get()))
+    # Maximum price entry
+    max_price_label = tkinter.Label(price_entry_frame, text="Max:", bg="#e6ffe6", font=("Helvetica", 10))  # Set label background color and font
+    max_price_label.pack(side=tkinter.LEFT)
+    price_to_entry = tkinter.Entry(price_entry_frame, width=10, font=("Helvetica", 10))  # Set entry width and font
+    price_to_entry.pack(side=tkinter.LEFT)
+
+    filter_button = tkinter.Button(filter_frame, text="Apply Filter", bg="#99ff99", font=("Helvetica", 10, "bold"),
+                                                                      command=lambda: filter_products(price_from_entry.get(), price_to_entry.get()))
     filter_button.pack()
 
-    # Recommendation
-    recommend_button = tkinter.Button(frame, text="Recommendations", command=show_recommendations)
-    recommend_button.pack()
+
+
+    # Adjust padding and spacing for a better appearance
+    frame.grid_rowconfigure((0, 1, 2), weight=1)
+    frame.grid_columnconfigure((0, 1), weight=1)
+
+
 
 # Function to search for a product
 def search_product(keyword):
