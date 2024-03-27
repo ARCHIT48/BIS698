@@ -3,6 +3,7 @@ from tkinter import messagebox, ttk
 import mysql.connector
 import logging
 import re
+import uuid
 from datetime import datetime
 from tkcalendar import Calendar
 
@@ -372,37 +373,188 @@ def show_recommendations():
     messagebox.showinfo("Recommendations", "Here are some recommended products based on your activity.")
 
 # Function to add a product to the cart
-def add_to_cart(product_id, description, price, quantity):
+def add_to_cart(product_id, description, price, quantity_combobox):
     global cart_items
+
+    # Extract the selected quantity from the Combobox
+    quantity = int(quantity_combobox.get())
+
+    # Add the item to the cart_items list
     cart_items.append((product_id, description, price, quantity))
+
+    # Show success message
     messagebox.showinfo("Success", "Product added to cart.")
+
 
 # Function to view the cart
 def view_cart():
     global cart_items
-    if not cart_items:
-        messagebox.showinfo("Info", "Your cart is empty.")
-    else:
-        cart_window = tkinter.Toplevel(order_cart_window)
-        cart_window.title("View Cart")
+
+    def reduce_quantity(product_id, quantity_label):
+        global cart_items
+        for i, item in enumerate(cart_items):
+            if item[0] == product_id:
+                current_quantity = int(quantity_label.cget("text"))
+                if current_quantity > 1:
+                    new_quantity = current_quantity - 1
+                    quantity_label.config(text=str(new_quantity))
+                    cart_items[i] = (item[0], item[1], item[2], new_quantity)
+                    break
+        else:
+            messagebox.showerror("Error", "Product not found in cart.")
+
+    def increase_quantity(product_id, quantity_label):
+        global cart_items
+        for i, item in enumerate(cart_items):
+            if item[0] == product_id:
+                current_quantity = int(quantity_label.cget("text"))
+                if current_quantity < 5:  # Maximum quantity limit
+                    new_quantity = current_quantity + 1
+                    quantity_label.config(text=str(new_quantity))
+                    cart_items[i] = (item[0], item[1], item[2], new_quantity)
+                    break
+                else:
+                    messagebox.showinfo("Info", "Maximum quantity limit reached.")
+                    break
+        else:
+            messagebox.showerror("Error", "Product not found in cart.")
+
+    def cancel_order():
+        global cart_items
+        cart_items = []  # Clear the cart items
+        cart_window.destroy()  # Close the cart window
+        order_cart_screen()  # Return to the order cart page
+
+    def checkout():
+        global cart_items
+        # Close the current cart window
+        cart_window.destroy()
+
+        # Create a new window for the checkout process
+        checkout_window = tkinter.Toplevel(window)
+        checkout_window.title("Checkout")
 
         # Create a frame to organize widgets
-        frame = tkinter.Frame(cart_window)
+        frame = tkinter.Frame(checkout_window)
         frame.pack()
 
-        # Add widgets to display cart items
-        title_label = tkinter.Label(frame, text="Cart Items", font=("Helvetica", 16))
-        title_label.pack(pady=10)
+        # Function to validate US zip code
+        def validate_zip(zip_code):
+            # US zip code pattern: 5 digits or 5 digits followed by a hyphen and 4 digits
+            pattern = r'^\d{5}(?:-\d{4})?$'
+            return re.match(pattern, zip_code)
+        
+        # Name field
+        name_label = tkinter.Label(frame, text="Name:")
+        name_label.grid(row=5, column=0, padx=10, pady=5)
+        name_entry = tkinter.Entry(frame)
+        name_entry.grid(row=5, column=1, padx=10, pady=5)
 
-        total_price = 0
-        for item in cart_items:
-            product_id, description, price, quantity = item
-            total_price += price * quantity
-            item_label = tkinter.Label(frame, text=f"{description} - ${price} x {quantity}")
-            item_label.pack()
+        # Delivery address fields
+        street_label = tkinter.Label(frame, text="Street:")
+        street_label.grid(row=0, column=0, padx=10, pady=5)
+        street_entry = tkinter.Entry(frame)
+        street_entry.grid(row=0, column=1, padx=10, pady=5)
 
-        total_label = tkinter.Label(frame, text=f"Total: ${total_price}")
-        total_label.pack(pady=10)
+        zip_label = tkinter.Label(frame, text="Zip Code:")
+        zip_label.grid(row=2, column=0, padx=10, pady=5)
+        zip_entry = tkinter.Entry(frame)
+        zip_entry.grid(row=2, column=1, padx=10, pady=5)
+
+        city_label = tkinter.Label(frame, text="City:")
+        city_label.grid(row=3, column=0, padx=10, pady=5)
+        city_entry = tkinter.Entry(frame)
+        city_entry.grid(row=3, column=1, padx=10, pady=5)
+
+        state_label = tkinter.Label(frame, text="State:")
+        state_label.grid(row=4, column=0, padx=10, pady=5)
+        state_entry = tkinter.Entry(frame)
+        state_entry.grid(row=4, column=1, padx=10, pady=5)
+
+        # Phone number field
+        phone_label = tkinter.Label(frame, text="Phone Number:")
+        phone_label.grid(row=6, column=0, padx=10, pady=5)
+        phone_entry = tkinter.Entry(frame)
+        phone_entry.grid(row=6, column=1, padx=10, pady=5)
+
+        # Payment processing (simulate with a button)
+        def process_payment():
+            # Retrieve values from entry fields
+            street = street_entry.get()
+            zip_code = zip_entry.get()
+            city = city_entry.get()
+            state = state_entry.get()
+            name = name_entry.get()
+            phone_number = phone_entry.get()
+
+            # Validate mandatory fields
+            if not (street and zip_code and city and state and name and phone_number):
+                messagebox.showerror("Error", "All fields are mandatory. Please fill in all required information.")
+                return
+
+            # Validate phone number format
+            if len(phone_number) != 10 or not phone_number.isdigit():
+                messagebox.showerror("Error", "Please enter a valid 10-digit phone number.")
+                return
+
+            # Validate US zip code format
+            if not validate_zip(zip_code):
+                messagebox.showerror("Error", "Please enter a valid US zip code.")
+                return
+
+            # Generate a unique order number (simulation)
+            order_number = "1234567890"
+
+            # Display the order number to the user
+            messagebox.showinfo("Order Placed", f"Your order has been placed successfully!\nOrder Number: {order_number}")
+
+            # Close the payment and checkout window
+            checkout_window.destroy()
+
+            # Return to the order cart page
+            order_cart_screen()
+
+        # Payment button
+        payment_button = tkinter.Button(frame, text="Process Payment", command=process_payment)
+        payment_button.grid(row=7, columnspan=2, padx=10, pady=10)
+
+    cart_window = tkinter.Toplevel(order_cart_window)
+    cart_window.title("View Cart")
+
+    # Create a frame to organize widgets
+    frame = tkinter.Frame(cart_window)
+    frame.pack()
+
+    # Add widgets to display cart items
+    title_label = tkinter.Label(frame, text="Cart Items", font=("Helvetica", 16))
+    title_label.pack(pady=10)
+
+    for item in cart_items:
+        product_id, description, price, quantity = item
+
+        # Product label
+        product_label = tkinter.Label(frame, text=f"{description} - ${price} x {quantity}")
+        product_label.pack()
+
+        # Quantity label
+        quantity_label = tkinter.Label(frame, text=str(quantity))
+        quantity_label.pack()
+
+        # Reduce quantity button
+        reduce_button = tkinter.Button(frame, text="Reduce", command=lambda p_id=product_id, ql=quantity_label: reduce_quantity(p_id, ql))
+        reduce_button.pack(side=tkinter.LEFT, padx=5)
+
+        # Increase quantity button
+        increase_button = tkinter.Button(frame, text="Increase", command=lambda p_id=product_id, ql=quantity_label: increase_quantity(p_id, ql))
+        increase_button.pack(side=tkinter.LEFT, padx=5)
+
+    # Cancel order button
+    cancel_button = tkinter.Button(frame, text="Cancel Order", command=cancel_order)
+    cancel_button.pack(pady=10)
+
+    # Checkout button
+    checkout_button = tkinter.Button(frame, text="Checkout", command=checkout)
+    checkout_button.pack(pady=10)
 
 # Function to place an order
 def place_order():
@@ -413,6 +565,7 @@ def place_order():
     cart_items.clear()
     # Close the order cart window after placing the order
     order_cart_window.destroy()
+
 
 try:
     # Replace '141.209.241.81', 'bis698_S24_w200', 'grp2w200', and 'passinit' with your actual database details
@@ -481,5 +634,4 @@ for widget in buttons_frame.winfo_children():
 
 # Start the main event loop
 window.mainloop()
-
 
