@@ -93,22 +93,22 @@ def userdetails():
     dob_entry.grid(row=4, column=1)
 
     # Add a Combobox for selecting states
-    state_label = tkinter.Label(user_info_frame, text="State:")
-    state_label.grid(row=5, column=0)
+    #state_label = tkinter.Label(user_info_frame, text="State:")
+    #state_label.grid(row=5, column=0)
 
     # List of US states
-    us_states = [
-        "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut", "Delaware",
-        "Florida", "Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa", "Kansas", "Kentucky",
-        "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan", "Minnesota", "Mississippi",
-        "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire", "New Jersey", "New Mexico",
-        "New York", "North Carolina", "North Dakota", "Ohio", "Oklahoma", "Oregon", "Pennsylvania",
-        "Rhode Island", "South Carolina", "South Dakota", "Tennessee", "Texas", "Utah", "Vermont",
-        "Virginia", "Washington", "West Virginia", "Wisconsin", "Wyoming"
-    ]
+    #us_states = [
+      #  "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut", "Delaware",
+       # "Florida", "Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa", "Kansas", "Kentucky",
+        #"Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan", "Minnesota", "Mississippi",
+       # "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire", "New Jersey", "New Mexico",
+       # "New York", "North Carolina", "North Dakota", "Ohio", "Oklahoma", "Oregon", "Pennsylvania",
+        #"Rhode Island", "South Carolina", "South Dakota", "Tennessee", "Texas", "Utah", "Vermont",
+        #"Virginia", "Washington", "West Virginia", "Wisconsin", "Wyoming"
+  #  ]
 
-    state_combobox = ttk.Combobox(user_info_frame, values=us_states, state="readonly")
-    state_combobox.grid(row=5, column=1)
+   # state_combobox = ttk.Combobox(user_info_frame, values=us_states, state="readonly")
+    # state_combobox.grid(row=5, column=1)
 
     # Function to set the selected date in the Date of Birth entry
     def set_date():
