@@ -93,22 +93,21 @@ def userdetails():
     dob_entry.grid(row=4, column=1)
 
     # Add a Combobox for selecting states
-    #state_label = tkinter.Label(user_info_frame, text="State:")
-    #state_label.grid(row=5, column=0)
+    state_label = tkinter.Label(user_info_frame, text="State:")
+    state_label.grid(row=5, column=0)
 
     # List of US states
-    #us_states = [
-      #  "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut", "Delaware",
-       # "Florida", "Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa", "Kansas", "Kentucky",
-        #"Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan", "Minnesota", "Mississippi",
-       # "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire", "New Jersey", "New Mexico",
-       # "New York", "North Carolina", "North Dakota", "Ohio", "Oklahoma", "Oregon", "Pennsylvania",
-        #"Rhode Island", "South Carolina", "South Dakota", "Tennessee", "Texas", "Utah", "Vermont",
-        #"Virginia", "Washington", "West Virginia", "Wisconsin", "Wyoming"
-  #  ]
+    us_states = [
+      "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut", "Delaware",
+      "Florida", "Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa", "Kansas", "Kentucky",
+      "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan", "Minnesota", "Mississippi",
+      "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire", "New Jersey", "New Mexico",
+      "New York", "North Carolina", "North Dakota", "Ohio", "Oklahoma", "Oregon", "Pennsylvania",
+      "Rhode Island", "South Carolina", "South Dakota", "Tennessee", "Texas", "Utah", "Vermont",
+      "Virginia", "Washington", "West Virginia", "Wisconsin", "Wyoming"]
 
-   # state_combobox = ttk.Combobox(user_info_frame, values=us_states, state="readonly")
-    # state_combobox.grid(row=5, column=1)
+    state_combobox = ttk.Combobox(user_info_frame, values=us_states, state="readonly")
+    state_combobox.grid(row=5, column=1)
 
     # Function to set the selected date in the Date of Birth entry
     def set_date():
@@ -331,7 +330,10 @@ def order_cart_screen():
     filter_button = tkinter.Button(filter_frame, text="Apply Filter", bg="#99ff99", font=("Helvetica", 10, "bold"),
                                                                       command=lambda: filter_products(price_from_entry.get(), price_to_entry.get()))
     filter_button.pack()
-
+    
+    # Add a button to view the cart in the order cart screen
+    view_cart_button = tkinter.Button(frame, text="View Cart", command=view_cart)
+    view_cart_button.pack()  # Adjust the positioning as needed
 
 
     # Adjust padding and spacing for a better appearance
