@@ -4,7 +4,7 @@ import mysql.connector
 import logging
 import re
 from datetime import datetime
-from tkcalendar import Calendar  # Importing the Calendar widget
+from tkcalendar import Calendar
 
 # Define the connection variable in the global scope
 connection = None
@@ -15,9 +15,9 @@ cart_items = []
 # Configure logging
 logging.basicConfig(filename='app.log', level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
-
 # Function to handle sign-in button
 def enter_app():
+    global connection
     user_id = userid_entry.get()
     password = password_entry.get()
 
