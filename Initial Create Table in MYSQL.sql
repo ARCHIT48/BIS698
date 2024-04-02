@@ -151,5 +151,5 @@ FOREIGN KEY (User_Acc_ID) REFERENCES User_Account(User_Acc_ID);
 
 -- Alter Product table to add foreign key constraints
 ALTER TABLE Product
-ADD CONSTRAINT fk_category_user_account
+ADD CONSTRAINT fk_category_product
 FOREIGN KEY (Category_ID) REFERENCES Category(Category_ID);
