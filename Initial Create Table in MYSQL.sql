@@ -148,3 +148,8 @@ FOREIGN KEY (User_Acc_ID) REFERENCES User_Account(User_Acc_ID);
 ALTER TABLE Customer
 ADD CONSTRAINT fk_customer_user_account
 FOREIGN KEY (User_Acc_ID) REFERENCES User_Account(User_Acc_ID);
+
+-- Alter Product table to add foreign key constraints
+ALTER TABLE Product
+ADD CONSTRAINT fk_category_user_account
+FOREIGN KEY (Category_ID) REFERENCES Category(Category_ID);
