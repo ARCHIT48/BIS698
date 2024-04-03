@@ -45,7 +45,6 @@ def enter_app():
         messagebox.showerror("Error", "Error occurred during sign-in. Please try again.")
 
 
-
 # Function to clear sign-in entries
 def clear_signin_entries():
     userid_entry.delete(0, tkinter.END)
@@ -269,7 +268,11 @@ def save_order_to_database():
     try:
         cursor = connection.cursor()
         # Generate a unique order ID
-        order_id = str(uuid.uuid4())
+        #order_id = str(uuid.uuid4())
+        #order_id = int(uuid_str.replace("-", "")[:11])
+        #print(order_id)
+
+
         # Get the current date
         current_date = datetime.now().strftime('%Y-%m-%d')
         # Save the order to the database
@@ -597,9 +600,9 @@ def view_cart():
 
         # Function to validate US zip code
         def validate_zip(zip_code):
-            # US zip code pattern: 5 digits or 5 digits followed by a hyphen and 4 digits
-            pattern = r'^\d{5}(?:-\d{4})?$'
-            return re.match(pattern, zip_code)
+            # Allowed zip codes for MOUNT Pleasant
+            allowed_zip_codes = ["48858", "48859"]
+            return zip_code in allowed_zip_codes
 
         # Name field
         name_label = ttk.Label(frame, text="Name:")
@@ -613,31 +616,23 @@ def view_cart():
         street_entry = ttk.Entry(frame)
         street_entry.grid(row=1, column=1, padx=10, pady=5)
 
+        # Zip Code field with limited options
         zip_label = ttk.Label(frame, text="Zip Code:")
         zip_label.grid(row=2, column=0, padx=10, pady=5)
-        zip_entry = ttk.Entry(frame)
+        zip_entry = ttk.Combobox(frame, values=["48858", "48859"])
         zip_entry.grid(row=2, column=1, padx=10, pady=5)
 
+        # City field with limited options
         city_label = ttk.Label(frame, text="City:")
         city_label.grid(row=3, column=0, padx=10, pady=5)
-        city_entry = ttk.Entry(frame)
+        city_entry = ttk.Combobox(frame, values=["MOUNT PLEASANT"])
         city_entry.grid(row=3, column=1, padx=10, pady=5)
 
+        # State field with limited options
         state_label = ttk.Label(frame, text="State:")
         state_label.grid(row=4, column=0, padx=10, pady=5)
-
-        # Dropdown menu for selecting states
-        us_states = [
-            "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut", "Delaware",
-            "Florida", "Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa", "Kansas", "Kentucky",
-            "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan", "Minnesota", "Mississippi",
-            "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire", "New Jersey", "New Mexico",
-            "New York", "North Carolina", "North Dakota", "Ohio", "Oklahoma", "Oregon", "Pennsylvania",
-            "Rhode Island", "South Carolina", "South Dakota", "Tennessee", "Texas", "Utah", "Vermont",
-            "Virginia", "Washington", "West Virginia", "Wisconsin", "Wyoming"
-        ]
-        state_combobox = ttk.Combobox(frame, values=us_states, state="readonly")
-        state_combobox.grid(row=4, column=1, padx=10, pady=5)
+        state_entry = ttk.Combobox(frame, values=["Michigan"])
+        state_entry.grid(row=4, column=1, padx=10, pady=5)
 
         # Phone number field
         phone_label = ttk.Label(frame, text="Phone Number:")
@@ -651,7 +646,7 @@ def view_cart():
             street = street_entry.get()
             zip_code = zip_entry.get()
             city = city_entry.get()
-            state = state_combobox.get()  # Get selected state
+            state = state_entry.get()
             name = name_entry.get()
             phone_number = phone_entry.get()
 
@@ -667,11 +662,13 @@ def view_cart():
 
             # Validate US zip code format
             if not validate_zip(zip_code):
-                messagebox.showerror("Error", "Please enter a valid US zip code.")
+                messagebox.showerror("Error", "Please enter a valid zip code for MOUNT Pleasant.")
                 return
 
             # Generate a unique order number (simulation)
-            order_id = str(uuid.uuid4())
+            uuid_str = str(uuid.uuid4())
+            order_id = int(uuid_str.replace("-", "")[:4])
+
             
             # Display the order number to the user
             messagebox.showinfo("Order Placed", f"Your order has been placed successfully!\nOrder Number: {order_id}")
@@ -680,7 +677,7 @@ def view_cart():
             checkout_window.destroy()
 
             # Return to the order cart page
-            order_cart_screen()
+            order_cart_screen(current_user)
 
         # Payment button
         payment_button = ttk.Button(frame, text="Process Payment", command=process_payment)
