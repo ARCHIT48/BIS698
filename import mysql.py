@@ -46,7 +46,6 @@ def enter_app():
 
 
 
-
 # Function to clear sign-in entries
 def clear_signin_entries():
     userid_entry.delete(0, tkinter.END)
@@ -245,6 +244,44 @@ def login():
     current_user = get_current_user_id()  # Assuming get_current_user_id() retrieves the user's ID after successful login
     order_cart_screen()  # Open the order cart screen after successful login
 
+# Function to display past orders
+def view_past_orders():
+    try:
+        cursor = connection.cursor()
+
+        # Retrieve previous orders for the current user
+        cursor.execute("SELECT * FROM Orders WHERE Customer_ID = %s", (current_user,))  # Assuming current_user holds the user's ID
+        previous_orders = cursor.fetchall()
+
+        # Display previous orders in a new window or dialog
+        # You can use tkinter's Toplevel window to create a new window for displaying previous orders
+
+    except mysql.connector.Error as error:
+        print("Error occurred while fetching previous orders:", error)
+        logging.error("Error occurred while fetching previous orders: %s", error)
+        messagebox.showerror("Error", "Error occurred while fetching previous orders. Please try again.")
+
+
+
+# Function to save the current order to the database
+def save_order_to_database():
+    global total_price
+    try:
+        cursor = connection.cursor()
+        # Generate a unique order ID
+        order_id = str(uuid.uuid4())
+        # Get the current date
+        current_date = datetime.now().strftime('%Y-%m-%d')
+        # Save the order to the database
+        cursor.execute("INSERT INTO Orders (Order_ID, Date, Total_Price, Customer_ID, Shipment_ID) VALUES (%s, %s, %s, %s, %s)",
+                       (order_id, current_date, total_price, current_user, None))
+        connection.commit()
+        messagebox.showinfo("Success", "Order saved to database successfully!")
+    except mysql.connector.Error as error:
+        print("Error occurred while saving order to database:", error)
+        logging.error("Error occurred while saving order to database: %s", error)
+        messagebox.showerror("Error", "Error occurred while saving order to database. Please try again.")
+
 
 # Function to create the order cart screen
 def order_cart_screen(current_user):
@@ -291,6 +328,13 @@ def order_cart_screen(current_user):
     welcome_label = tkinter.Label(frame, text=f"Welcome {user_first_name}!", font=("Helvetica", 16), bg="#e6ffe6")  # Set label background color
     welcome_label.pack()
 
+    # Add a button to view past orders
+    view_past_orders_button = tkinter.Button(frame, text="View Past Orders", command=view_past_orders)
+    view_past_orders_button.pack()
+
+    # Add a button to save the current order to the database
+    save_order_button = tkinter.Button(frame, text="Save Order", command=save_order_to_database)
+    save_order_button.pack()
 
     # Products section
     products_frame = tkinter.Frame(frame, bg="#e6ffe6")  # Set frame background color
@@ -448,11 +492,6 @@ def filter_products(min_price, max_price):
         messagebox.showerror("Error", "Error occurred while filtering         products: %s", error)
 
 
-# Function to show product recommendations
-def show_recommendations():
-    # Implement logic to fetch and display product recommendations based on user behavior
-    messagebox.showinfo("Recommendations", "Here are some recommended products based on your activity.")
-
 # Function to add a product to the cart
 def add_to_cart(product_id, description, price, quantity_combobox):
     global cart_items, total_price
@@ -469,8 +508,26 @@ def add_to_cart(product_id, description, price, quantity_combobox):
     # Update the total price
     total_price += item_price
 
-    # Show success message
-    messagebox.showinfo("Success", "Product added to cart.")
+    # Create a custom messagebox
+    success_window = tk.Toplevel()
+    success_window.title("Success")
+    
+    # Create a label to display the success message with fixed width
+    success_label = tk.Label(success_window, text="Product added to cart.", width=20, justify="center")
+    success_label.pack(padx=10, pady=10)
+
+    # Set the size of the window and center it on the screen
+    success_window.geometry("200x100")
+    success_window.eval('tk::PlaceWindow . center')
+
+    # Destroy the window after a few seconds
+    success_window.after(2000, success_window.destroy)
+
+# Example usage:
+# add_to_cart(product_id, description, price, quantity_combobox)
+# Example usage:
+# add_to_cart(product_id, description, price, quantity_combobox)
+
 
 # Function to view the cart
 def view_cart():
@@ -518,11 +575,11 @@ def view_cart():
         cart_window.destroy()
 
         # Create a new window for the checkout process
-        checkout_window = tkinter.Toplevel(window)
+        checkout_window = ttk.Toplevel(window)
         checkout_window.title("Checkout")
 
         # Create a frame to organize widgets
-        frame = tkinter.Frame(checkout_window)
+        frame = ttk.Frame(checkout_window)
         frame.pack()
 
         # Function to validate US zip code
@@ -532,28 +589,28 @@ def view_cart():
             return re.match(pattern, zip_code)
 
         # Name field
-        name_label = tkinter.Label(frame, text="Name:")
+        name_label = ttk.Label(frame, text="Name:")
         name_label.grid(row=0, column=0, padx=10, pady=5)
-        name_entry = tkinter.Entry(frame)
+        name_entry = ttk.Entry(frame)
         name_entry.grid(row=0, column=1, padx=10, pady=5)
 
         # Delivery address fields
-        street_label = tkinter.Label(frame, text="Street:")
+        street_label = ttk.Label(frame, text="Street:")
         street_label.grid(row=1, column=0, padx=10, pady=5)
-        street_entry = tkinter.Entry(frame)
+        street_entry = ttk.Entry(frame)
         street_entry.grid(row=1, column=1, padx=10, pady=5)
 
-        zip_label = tkinter.Label(frame, text="Zip Code:")
+        zip_label = ttk.Label(frame, text="Zip Code:")
         zip_label.grid(row=2, column=0, padx=10, pady=5)
-        zip_entry = tkinter.Entry(frame)
+        zip_entry = ttk.Entry(frame)
         zip_entry.grid(row=2, column=1, padx=10, pady=5)
 
-        city_label = tkinter.Label(frame, text="City:")
+        city_label = ttk.Label(frame, text="City:")
         city_label.grid(row=3, column=0, padx=10, pady=5)
-        city_entry = tkinter.Entry(frame)
+        city_entry = ttk.Entry(frame)
         city_entry.grid(row=3, column=1, padx=10, pady=5)
 
-        state_label = tkinter.Label(frame, text="State:")
+        state_label = ttk.Label(frame, text="State:")
         state_label.grid(row=4, column=0, padx=10, pady=5)
 
         # Dropdown menu for selecting states
@@ -570,9 +627,9 @@ def view_cart():
         state_combobox.grid(row=4, column=1, padx=10, pady=5)
 
         # Phone number field
-        phone_label = tkinter.Label(frame, text="Phone Number:")
+        phone_label = ttk.Label(frame, text="Phone Number:")
         phone_label.grid(row=5, column=0, padx=10, pady=5)
-        phone_entry = tkinter.Entry(frame)
+        phone_entry = ttk.Entry(frame)
         phone_entry.grid(row=5, column=1, padx=10, pady=5)
 
         # Payment processing (simulate with a button)
@@ -601,10 +658,10 @@ def view_cart():
                 return
 
             # Generate a unique order number (simulation)
-            order_number = "1234567890"
-
+            order_id = str(uuid.uuid4())
+            
             # Display the order number to the user
-            messagebox.showinfo("Order Placed", f"Your order has been placed successfully!\nOrder Number: {order_number}")
+            messagebox.showinfo("Order Placed", f"Your order has been placed successfully!\nOrder Number: {order_id}")
 
             # Close the payment and checkout window
             checkout_window.destroy()
@@ -613,56 +670,88 @@ def view_cart():
             order_cart_screen()
 
         # Payment button
-        payment_button = tkinter.Button(frame, text="Process Payment", command=process_payment)
+        payment_button = ttk.Button(frame, text="Process Payment", command=process_payment)
         payment_button.grid(row=6, columnspan=2, padx=10, pady=10)
 
     cart_window = tkinter.Toplevel(order_cart_window)
     cart_window.title("View Cart")
 
     # Create a frame to organize widgets
-    frame = tkinter.Frame(cart_window)
+    frame = ttk.Frame(cart_window)
     frame.pack()
 
     # Add widgets to display cart items
-    title_label = tkinter.Label(frame, text="Cart Items", font=("Helvetica", 16))
-    title_label.pack(pady=10)
+    title_label = ttk.Label(frame, text="Cart Items", font=("Helvetica", 16))
+    title_label.grid(row=0, column=0, columnspan=3, pady=10)
 
-    for item in cart_items:
+    for index, item in enumerate(cart_items):
         product_id, description, price, quantity = item
 
         # Product label
-        product_label = tkinter.Label(frame, text=f"{description} - ${price} x {quantity}")
-        product_label.pack()
+        product_label = ttk.Label(frame, text=f"{description} - ${price} x {quantity}")
+        product_label.grid(row=index+1, column=0)
 
         # Quantity label
-        quantity_label = tkinter.Label(frame, text=str(quantity))
-        quantity_label.pack()
+        quantity_label = ttk.Label(frame, text=str(quantity))
+        quantity_label.grid(row=index+1, column=1)
 
         # Reduce quantity button
-        reduce_button = tkinter.Button(frame, text="Reduce", command=lambda p_id=product_id, ql=quantity_label: reduce_quantity(p_id, ql))
-        reduce_button.pack(side=tkinter.LEFT, padx=5)
+        reduce_button = ttk.Button(frame, text="Reduce", command=lambda p_id=product_id, ql=quantity_label: reduce_quantity(p_id, ql))
+        reduce_button.grid(row=index+1, column=2, padx=5)
 
         # Increase quantity button
-        increase_button = tkinter.Button(frame, text="Increase", command=lambda p_id=product_id, ql=quantity_label: increase_quantity(p_id, ql))
-        increase_button.pack(side=tkinter.LEFT, padx=5)
+        increase_button = ttk.Button(frame, text="Increase", command=lambda p_id=product_id, ql=quantity_label: increase_quantity(p_id, ql))
+        increase_button.grid(row=index+1, column=3, padx=5)
 
     # Cancel order button
-    cancel_button = tkinter.Button(frame, text="Cancel Order", command=cancel_order)
-    cancel_button.pack(pady=10)
+    cancel_button = ttk.Button(frame, text="Cancel Order", command=cancel_order)
+    cancel_button.grid(row=len(cart_items)+1, column=0, columnspan=2, pady=10)
 
     # Checkout button
-    checkout_button = tkinter.Button(frame, text="Checkout", command=checkout)
-    checkout_button.pack(pady=10)
+    checkout_button = ttk.Button(frame, text="Checkout", command=checkout)
+    checkout_button.grid(row=len(cart_items)+1, column=2, columnspan=2, pady=10)
 
-# Function to place an order
+# function to place order
 def place_order():
-    # Implement the logic to place an order here
-    # You can fetch the selected products from the UI and save the order details to the database
-    messagebox.showinfo("Success", "Order placed successfully!")
-    # Clear cart items after placing the order
-    cart_items.clear()
-    # Close the order cart window after placing the order
-    order_cart_window.destroy()
+    global cart_items, total_price, current_user
+    try:
+        cursor = connection.cursor()
+
+        # Get the current date and time
+        current_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+        # Retrieve the current user's ID
+        current_user_id = current_user  # Assuming current_user holds the user's ID
+
+        # Insert the order details into the Orders table
+        cursor.execute("INSERT INTO Orders (Date, Total_Price, Customer_ID, Shipment_ID) VALUES (%s, %s, %s, %s)",
+                       (current_date, total_price, current_user_id, None))
+
+        # Commit the transaction
+        connection.commit()
+
+        # Retrieve the auto-generated order ID
+        cursor.execute("SELECT LAST_INSERT_ID()")
+        order_id = cursor.fetchone()[0]
+
+        # Show success message with the order ID
+        messagebox.showinfo("Success", f"Order placed successfully! Order ID: {order_id}")
+
+        # Clear cart items after placing the order
+        cart_items.clear()
+
+        # Close the order cart window after placing the order
+        order_cart_window.destroy()
+
+    except mysql.connector.Error as error:
+        # Print the error
+        print("Error occurred while placing order:", error)
+
+        # Log the error
+        logging.error("Error occurred while placing order: %s", error)
+
+        # Display error message to the user
+        messagebox.showerror("Error", "Error occurred while placing order. Please try again.")
 
 
 try:
