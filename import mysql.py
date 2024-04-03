@@ -32,7 +32,8 @@ def enter_app():
             # Authentication successful, open order cart screen
             print("Authentication successful. Entering app.")
             clear_signin_entries()
-            order_cart_screen()  # Open order cart screen
+            current_user = user_account[0]  # Assuming User_Account table's first column is User_ID
+            order_cart_screen(current_user)  # Pass current_user to the function
         else:
             print("Invalid credentials. Please try again.")
             logging.warning("Invalid sign-in attempt with user ID: %s", user_id)
@@ -42,6 +43,9 @@ def enter_app():
         print("Error occurred during sign-in:", error)
         logging.error("Error occurred during sign-in: %s", error)
         messagebox.showerror("Error", "Error occurred during sign-in. Please try again.")
+
+
+
 
 # Function to clear sign-in entries
 def clear_signin_entries():
@@ -234,10 +238,35 @@ def userdetails():
     btnCancel = tkinter.Button(frame, width=10, text="Cancel", command=signup_window.destroy)
     btnCancel.grid(row=1, column=1, padx=20, pady=10)
 
+def login():
+    # Authenticate user (e.g., by checking credentials against database)
+    # If authentication is successful, set the current_user variable
+    global current_user
+    current_user = get_current_user_id()  # Assuming get_current_user_id() retrieves the user's ID after successful login
+    order_cart_screen()  # Open the order cart screen after successful login
+
 
 # Function to create the order cart screen
-def order_cart_screen():
+def order_cart_screen(current_user):
     global order_cart_window
+    
+    # Fetch the first name of the user from the database
+    try:
+        cursor = connection.cursor()
+        cursor.execute("SELECT First_Name FROM Customer WHERE User_Acc_ID = %s", (current_user,))
+        user_data = cursor.fetchone()
+        connection.commit()
+        if user_data:
+            user_first_name = user_data[0]
+        else:
+            user_first_name = ""
+    except mysql.connector.Error as error:
+        print("Error occurred while fetching user data:", error)
+        logging.error("Error occurred while fetching user data: %s", error)
+        messagebox.showerror("Error", "Error occurred while fetching user data. Please try again.")
+        return
+
+    # Create the order cart window
     order_cart_window = tkinter.Toplevel(window)
     order_cart_window.title("Order Cart")
 
@@ -257,6 +286,11 @@ def order_cart_screen():
     # Label for the title
     title_label = tkinter.Label(frame, text="Order Cart", font=("Helvetica", 24, "bold"), bg="#e6ffe6")  # Set label background color
     title_label.pack(pady=20)
+
+    # Welcome message with user's first name
+    welcome_label = tkinter.Label(frame, text=f"Welcome {user_first_name}!", font=("Helvetica", 16), bg="#e6ffe6")  # Set label background color
+    welcome_label.pack()
+
 
     # Products section
     products_frame = tkinter.Frame(frame, bg="#e6ffe6")  # Set frame background color
