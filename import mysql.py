@@ -493,27 +493,36 @@ def filter_products(min_price, max_price):
 
 
 # Function to add a product to the cart
+# Function to add a product to the cart
 def add_to_cart(product_id, description, price, quantity_combobox):
     global cart_items, total_price
 
     # Extract the selected quantity from the Combobox
-    quantity = int(quantity_combobox.get())
+    selected_quantity = int(quantity_combobox.get())
 
-    # Calculate the total price of the added item
-    item_price = price * quantity
-
-    # Add the item to the cart_items list
-    cart_items.append((product_id, description, price, quantity))
-
-    # Update the total price
-    total_price += item_price
+    # Check if the product is already in the cart
+    for i, item in enumerate(cart_items):
+        if item[0] == product_id:
+            current_quantity = item[3]  # Get the current quantity
+            new_quantity = current_quantity + selected_quantity  # Add the selected quantity
+            if new_quantity > 5:
+                messagebox.showinfo("Info", "Maximum quantity limit reached.")
+                return  # Exit the function if the maximum limit is reached
+            # Update the cart item with the new quantity and price
+            cart_items[i] = (item[0], item[1], item[2], new_quantity)
+            total_price += price * selected_quantity  # Update the total price
+            break
+    else:
+        # If the product is not already in the cart, add it as a new item
+        cart_items.append((product_id, description, price, selected_quantity))
+        total_price += price * selected_quantity  # Update the total price
 
     # Create a custom messagebox
-    success_window = tk.Toplevel()
+    success_window = ttk.Toplevel()
     success_window.title("Success")
     
     # Create a label to display the success message with fixed width
-    success_label = tk.Label(success_window, text="Product added to cart.", width=20, justify="center")
+    success_label = ttk.Label(success_window, text="Product added to cart.", width=20, justify="center")
     success_label.pack(padx=10, pady=10)
 
     # Set the size of the window and center it on the screen
@@ -542,6 +551,10 @@ def view_cart():
                     new_quantity = current_quantity - 1
                     quantity_label.config(text=str(new_quantity))
                     cart_items[i] = (item[0], item[1], item[2], new_quantity)
+                    break
+                else:
+                    cart_items.pop(i)  # Remove the item if quantity becomes zero
+                    update_cart_display()  # Update the cart display
                     break
         else:
             messagebox.showerror("Error", "Product not found in cart.")
@@ -575,7 +588,7 @@ def view_cart():
         cart_window.destroy()
 
         # Create a new window for the checkout process
-        checkout_window = ttk.Toplevel(window)
+        checkout_window = tkinter.Toplevel(window)
         checkout_window.title("Checkout")
 
         # Create a frame to organize widgets
@@ -673,6 +686,42 @@ def view_cart():
         payment_button = ttk.Button(frame, text="Process Payment", command=process_payment)
         payment_button.grid(row=6, columnspan=2, padx=10, pady=10)
 
+    def update_cart_display():
+        # Clear the current content of the frame
+        for widget in frame.winfo_children():
+            widget.destroy()
+
+        # Add widgets to display updated cart items
+        title_label = ttk.Label(frame, text="Cart Items", font=("Helvetica", 16))
+        title_label.grid(row=0, column=0, columnspan=3, pady=10)
+
+        for index, item in enumerate(cart_items):
+            product_id, description, price, quantity = item
+
+            # Product label
+            product_label = ttk.Label(frame, text=f"{description} - ${price} x {quantity}")
+            product_label.grid(row=index+1, column=0)
+
+            # Quantity label
+            quantity_label = ttk.Label(frame, text=str(quantity))
+            quantity_label.grid(row=index+1, column=1)
+
+            # Reduce quantity button
+            reduce_button = ttk.Button(frame, text="Reduce", command=lambda p_id=product_id, ql=quantity_label: reduce_quantity(p_id, ql))
+            reduce_button.grid(row=index+1, column=2, padx=5)
+
+            # Increase quantity button
+            increase_button = ttk.Button(frame, text="Increase", command=lambda p_id=product_id, ql=quantity_label: increase_quantity(p_id, ql))
+            increase_button.grid(row=index+1, column=3, padx=5)
+
+        # Cancel order button
+        cancel_button = ttk.Button(frame, text="Cancel Order", command=cancel_order)
+        cancel_button.grid(row=len(cart_items)+1, column=0, columnspan=2, pady=10)
+
+        # Checkout button
+        checkout_button = ttk.Button(frame, text="Checkout", command=checkout)
+        checkout_button.grid(row=len(cart_items)+1, column=2, columnspan=2, pady=10)
+
     cart_window = tkinter.Toplevel(order_cart_window)
     cart_window.title("View Cart")
 
@@ -680,36 +729,8 @@ def view_cart():
     frame = ttk.Frame(cart_window)
     frame.pack()
 
-    # Add widgets to display cart items
-    title_label = ttk.Label(frame, text="Cart Items", font=("Helvetica", 16))
-    title_label.grid(row=0, column=0, columnspan=3, pady=10)
+    update_cart_display()
 
-    for index, item in enumerate(cart_items):
-        product_id, description, price, quantity = item
-
-        # Product label
-        product_label = ttk.Label(frame, text=f"{description} - ${price} x {quantity}")
-        product_label.grid(row=index+1, column=0)
-
-        # Quantity label
-        quantity_label = ttk.Label(frame, text=str(quantity))
-        quantity_label.grid(row=index+1, column=1)
-
-        # Reduce quantity button
-        reduce_button = ttk.Button(frame, text="Reduce", command=lambda p_id=product_id, ql=quantity_label: reduce_quantity(p_id, ql))
-        reduce_button.grid(row=index+1, column=2, padx=5)
-
-        # Increase quantity button
-        increase_button = ttk.Button(frame, text="Increase", command=lambda p_id=product_id, ql=quantity_label: increase_quantity(p_id, ql))
-        increase_button.grid(row=index+1, column=3, padx=5)
-
-    # Cancel order button
-    cancel_button = ttk.Button(frame, text="Cancel Order", command=cancel_order)
-    cancel_button.grid(row=len(cart_items)+1, column=0, columnspan=2, pady=10)
-
-    # Checkout button
-    checkout_button = ttk.Button(frame, text="Checkout", command=checkout)
-    checkout_button.grid(row=len(cart_items)+1, column=2, columnspan=2, pady=10)
 
 # function to place order
 def place_order():
