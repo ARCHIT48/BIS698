@@ -243,47 +243,6 @@ def login():
     current_user = get_current_user_id()  # Assuming get_current_user_id() retrieves the user's ID after successful login
     order_cart_screen()  # Open the order cart screen after successful login
 
-# Function to display past orders
-def view_past_orders():
-    try:
-        cursor = connection.cursor()
-
-        # Retrieve previous orders for the current user
-        cursor.execute("SELECT * FROM Orders WHERE Customer_ID = %s", (current_user,))  # Assuming current_user holds the user's ID
-        previous_orders = cursor.fetchall()
-
-        # Display previous orders in a new window or dialog
-        # You can use tkinter's Toplevel window to create a new window for displaying previous orders
-
-    except mysql.connector.Error as error:
-        print("Error occurred while fetching previous orders:", error)
-        logging.error("Error occurred while fetching previous orders: %s", error)
-        messagebox.showerror("Error", "Error occurred while fetching previous orders. Please try again.")
-
-
-
-# Function to save the current order to the database
-def save_order_to_database():
-    global total_price
-    try:
-        cursor = connection.cursor()
-        # Generate a unique order ID
-        #order_id = str(uuid.uuid4())
-        #order_id = int(uuid_str.replace("-", "")[:11])
-        #print(order_id)
-
-
-        # Get the current date
-        current_date = datetime.now().strftime('%Y-%m-%d')
-        # Save the order to the database
-        cursor.execute("INSERT INTO Orders (Order_ID, Date, Total_Price, Customer_ID, Shipment_ID) VALUES (%s, %s, %s, %s, %s)",
-                       (order_id, current_date, total_price, current_user, None))
-        connection.commit()
-        messagebox.showinfo("Success", "Order saved to database successfully!")
-    except mysql.connector.Error as error:
-        print("Error occurred while saving order to database:", error)
-        logging.error("Error occurred while saving order to database: %s", error)
-        messagebox.showerror("Error", "Error occurred while saving order to database. Please try again.")
 
 
 # Function to create the order cart screen
@@ -331,17 +290,7 @@ def order_cart_screen(current_user):
     welcome_label = tkinter.Label(frame, text=f"Welcome {user_first_name}!", font=("Helvetica", 16), bg="#e6ffe6")  # Set label background color
     welcome_label.pack()
 
-    # Add a button to view past orders
-    view_past_orders_button = tkinter.Button(frame, text="View Past Orders", command=view_past_orders)
-    view_past_orders_button.pack()
-
-    # Add a button to save the current order to the database
-    save_order_button = tkinter.Button(frame, text="Save Order", command=save_order_to_database)
-    save_order_button.pack()
-
-    # Add a button to edit profile
-    edit_profile_button = tkinter.Button(frame, text="Edit Profile", command=lambda: edit_profile(current_user))
-    edit_profile_button.pack()
+   
 
     # Products section
     products_frame = tkinter.Frame(frame, bg="#e6ffe6")  # Set frame background color
@@ -584,11 +533,8 @@ def edit_profile(current_user):
         cursor.execute("SELECT First_Name, Last_Name, Email FROM Customer WHERE User_Acc_ID = %s", (current_user,))
         user_data = cursor.fetchone()
 
-        edit_profile_window = tkinter.Toplevel(window)
-        edit_profile_window.title("Edit Profile")
         
-        frame = tkinter.Frame(edit_profile_window)
-        frame.pack()
+       
 
         first_name_label = tkinter.Label(frame, text="First Name:")
         first_name_label.grid(row=0, column=0, padx=10, pady=5)
