@@ -251,11 +251,20 @@ def order_cart_screen(current_user):
     def select_delivery_dates():
         today = datetime.datetime.today().date()
         delivery_dates = []
+        delivery_days = []
         for i in range(14):
             current_date = today + datetime.timedelta(days=i)
             if current_date.weekday() in [2, 5]:  # Wednesday: 2, Saturday: 5
                 delivery_dates.append(current_date)
-        return delivery_dates
+                if current_date.weekday() == 2:
+                    delivery_days.append("Wednesday")
+                else:
+                    delivery_days.append("Saturday")
+        return delivery_dates, delivery_days
+    
+    # Function to handle radio button selection
+    def select_delivery():
+        print(delivery_var.get())  # Print selected delivery date
     
     # Fetch the first name of the user from the database
     try:
@@ -385,18 +394,16 @@ def order_cart_screen(current_user):
     delivery_label = tkinter.Label(delivery_frame, text="Select Delivery Date:", font=("Helvetica", 16, "bold"), bg="#e6ffe6")
     delivery_label.pack()
 
-    delivery_dates = select_delivery_dates()[:4]  # Get the next 4 delivery dates
+    delivery_dates, delivery_days = select_delivery_dates()[:2]  # Get the next 2 delivery dates and corresponding days
 
     delivery_var = tkinter.StringVar()  # Variable to hold selected delivery date
-    
-    # Function to handle radio button selection
-    def select_delivery():
-        print(delivery_var.get())  # Print selected delivery date
-    
-    for date in delivery_dates:
-        delivery_radio = tkinter.Radiobutton(delivery_frame, text=date.strftime('%Y-%m-%d'), variable=delivery_var, value=date.strftime('%Y-%m-%d'),
-                                             font=("Helvetica", 12), bg="#e6ffe6", command=select_delivery)
-        delivery_radio.pack(anchor=tkinter.W)
+
+    for date, day in zip(delivery_dates, delivery_days):
+        for time_slot in ["6-7pm", "7-8pm", "8-9pm"]:
+            delivery_radio = tkinter.Radiobutton(delivery_frame, text=f"{day} {date.strftime('%Y-%m-%d')} {time_slot}", variable=delivery_var,
+                                                 value=f"{date.strftime('%Y-%m-%d')} {time_slot}",
+                                                 font=("Helvetica", 12), bg="#e6ffe6", command=select_delivery)
+            delivery_radio.pack(anchor=tkinter.W)
 
     # Add a button to view the cart in the order cart screen
     view_cart_button = tkinter.Button(frame, text="View Cart", command=view_cart)
