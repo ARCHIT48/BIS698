@@ -339,12 +339,32 @@ def order_cart_screen(current_user):
     save_order_button = tkinter.Button(frame, text="Save Order", command=save_order_to_database)
     save_order_button.pack()
 
+    # Add a button to edit profile
+    edit_profile_button = tkinter.Button(frame, text="Edit Profile", command=lambda: edit_profile(current_user))
+    edit_profile_button.pack()
+
     # Products section
     products_frame = tkinter.Frame(frame, bg="#e6ffe6")  # Set frame background color
     products_frame.pack(side=tkinter.LEFT, padx=20, pady=10, fill=tkinter.BOTH, expand=True)
 
     products_label = tkinter.Label(products_frame, text="Products", font=("Helvetica", 16, "bold"), bg="#e6ffe6")  # Set label background color
     products_label.pack()
+
+    # Create a Canvas for the products
+    products_canvas = tkinter.Canvas(products_frame, bg="#e6ffe6")
+    products_canvas.pack(side=tkinter.LEFT, fill=tkinter.BOTH, expand=True)
+
+    # Add a scrollbar for the products
+    scrollbar = tkinter.Scrollbar(products_frame, orient="vertical", command=products_canvas.yview)
+    scrollbar.pack(side=tkinter.RIGHT, fill="y")
+
+    # Configure the canvas
+    products_canvas.configure(yscrollcommand=scrollbar.set)
+    products_canvas.bind('<Configure>', lambda e: products_canvas.configure(scrollregion=products_canvas.bbox("all")))
+
+    # Create a frame inside the canvas to place products
+    products_frame_inside_canvas = tkinter.Frame(products_canvas, bg="#e6ffe6")
+    products_canvas.create_window((0, 0), window=products_frame_inside_canvas, anchor='nw')
 
     # Fetch products from the database
     try:
@@ -355,13 +375,13 @@ def order_cart_screen(current_user):
 
         # Display products in a list format
         for product in products:
-            product_label = tkinter.Label(products_frame, text=f"{product[1]} - ${product[2]}", bg="#e6ffe6", font=("Helvetica", 12))  # Set label background color and font
+            product_label = tkinter.Label(products_frame_inside_canvas, text=f"{product[1]} - ${product[2]}", bg="#e6ffe6", font=("Helvetica", 12))  # Set label background color and font
             product_label.pack()
 
-            quantity_combobox = ttk.Combobox(products_frame, values=[i for i in range(1, 6)], state="readonly", width=5, font=("Helvetica", 10))  # Set combobox width and font
+            quantity_combobox = ttk.Combobox(products_frame_inside_canvas, values=[i for i in range(1, 6)], state="readonly", width=5, font=("Helvetica", 10))  # Set combobox width and font
             quantity_combobox.pack()
 
-            add_to_cart_button = tkinter.Button(products_frame, text="Add to Cart", bg="#99ff99", font=("Helvetica", 10, "bold"),  # Set button background color and font
+            add_to_cart_button = tkinter.Button(products_frame_inside_canvas, text="Add to Cart", bg="#99ff99", font=("Helvetica", 10, "bold"),  # Set button background color and font
                                                  command=lambda p_id=product[0], desc=product[1],
                                                                 price=product[2], qty=quantity_combobox: add_to_cart(
                                                      p_id, desc, price, qty))
@@ -411,17 +431,14 @@ def order_cart_screen(current_user):
     filter_button = tkinter.Button(filter_frame, text="Apply Filter", bg="#99ff99", font=("Helvetica", 10, "bold"),
                                                                       command=lambda: filter_products(price_from_entry.get(), price_to_entry.get()))
     filter_button.pack()
-    
+
     # Add a button to view the cart in the order cart screen
     view_cart_button = tkinter.Button(frame, text="View Cart", command=view_cart)
     view_cart_button.pack()  # Adjust the positioning as needed
 
-
     # Adjust padding and spacing for a better appearance
     frame.grid_rowconfigure((0, 1, 2), weight=1)
     frame.grid_columnconfigure((0, 1), weight=1)
-
-
 
 # Function to search for a product
 def search_product(keyword):
@@ -539,6 +556,70 @@ def add_to_cart(product_id, description, price, quantity_combobox):
 # add_to_cart(product_id, description, price, quantity_combobox)
 # Example usage:
 # add_to_cart(product_id, description, price, quantity_combobox)
+
+def edit_profile(current_user):
+
+    
+    # Function to update the profile information
+    def update_profile():
+        new_first_name = first_name_entry.get()
+        new_last_name = last_name_entry.get()
+        new_email = email_entry.get()
+        new_password = password_entry.get()
+
+        try:
+            cursor = connection.cursor()
+            cursor.execute("UPDATE Customer SET First_Name = %s, Last_Name = %s, Email = %s, Password = %s WHERE User_Acc_ID = %s",
+                           (new_first_name, new_last_name, new_email, new_password, current_user))
+            connection.commit()
+
+            # Display success message
+            messagebox.showinfo("Success", "Profile updated successfully!")
+        except mysql.connector.Error as error:
+            print("Error occurred while updating profile:", error)
+            messagebox.showerror("Error", "Error occurred while updating profile. Please try again.")
+
+    try:
+        cursor = connection.cursor()
+        cursor.execute("SELECT First_Name, Last_Name, Email FROM Customer WHERE User_Acc_ID = %s", (current_user,))
+        user_data = cursor.fetchone()
+
+        edit_profile_window = tkinter.Toplevel(window)
+        edit_profile_window.title("Edit Profile")
+        
+        frame = tkinter.Frame(edit_profile_window)
+        frame.pack()
+
+        first_name_label = tkinter.Label(frame, text="First Name:")
+        first_name_label.grid(row=0, column=0, padx=10, pady=5)
+        first_name_entry = tkinter.Entry(frame)
+        first_name_entry.grid(row=0, column=1, padx=10, pady=5)
+        first_name_entry.insert(0, user_data[0])
+
+        last_name_label = tkinter.Label(frame, text="Last Name:")
+        last_name_label.grid(row=1, column=0, padx=10, pady=5)
+        last_name_entry = tkinter.Entry(frame)
+        last_name_entry.grid(row=1, column=1, padx=10, pady=5)
+        last_name_entry.insert(0, user_data[1])
+
+        email_label = tkinter.Label(frame, text="Email:")
+        email_label.grid(row=2, column=0, padx=10, pady=5)
+        email_entry = tkinter.Entry(frame)
+        email_entry.grid(row=2, column=1, padx=10, pady=5)
+        email_entry.insert(0, user_data[2])
+
+        password_label = tkinter.Label(frame, text="Password:")
+        password_label.grid(row=3, column=0, padx=10, pady=5)
+        password_entry = tkinter.Entry(frame, show="*")
+        password_entry.grid(row=3, column=1, padx=10, pady=5)
+
+        # Button to update profile
+        update_button = tkinter.Button(frame, text="Update Profile", command=update_profile)
+        update_button.grid(row=4, columnspan=2, padx=10, pady=10)
+
+    except mysql.connector.Error as error:
+        print("Error occurred while fetching user data for profile edit:", error)
+        messagebox.showerror("Error", "Error occurred while fetching user data for profile edit. Please try again.")
 
 
 # Function to view the cart
@@ -830,6 +911,9 @@ btnSignIn.grid(row=3, column=0)
 
 btnSignUp = tkinter.Button(buttons_frame, width=10, text="Sign-Up", command=userdetails)
 btnSignUp.grid(row=3, column=1)
+
+
+
 
 btnExit = tkinter.Button(buttons_frame, width=10, text="Exit", command=window.destroy)
 btnExit.grid(row=3, column=2)
