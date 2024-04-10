@@ -6,6 +6,7 @@ import logging
 import re
 import uuid
 from datetime import datetime
+import datetime
 from tkcalendar import Calendar
 
 # Define the connection variable in the global scope
@@ -44,12 +45,10 @@ def enter_app():
         logging.error("Error occurred during sign-in: %s", error)
         messagebox.showerror("Error", "Error occurred during sign-in. Please try again.")
 
-
 # Function to clear sign-in entries
 def clear_signin_entries():
     userid_entry.delete(0, tkinter.END)
     password_entry.delete(0, tkinter.END)
-
 
 def userdetails():
     # Create a new window for sign-up
@@ -244,10 +243,25 @@ def login():
     order_cart_screen()  # Open the order cart screen after successful login
 
 
-
 # Function to create the order cart screen
 def order_cart_screen(current_user):
     global order_cart_window
+    
+    # Function to select only Wednesdays and Saturdays from the next 14 days
+    def select_delivery_dates():
+        today = datetime.datetime.today().date()
+        delivery_dates = []
+        for i in range(14):
+            current_date = today + datetime.timedelta(days=i)
+            if current_date.weekday() in [2, 5]:  # Wednesday: 2, Saturday: 5
+                delivery_dates.append(current_date)
+        return delivery_dates
+    
+    # Function to highlight delivery dates in the calendar
+    def highlight_dates(cal):
+        delivery_dates = select_delivery_dates()
+        for date in delivery_dates:
+            cal.tag_config(str(date), background="lightblue")
     
     # Fetch the first name of the user from the database
     try:
@@ -290,7 +304,17 @@ def order_cart_screen(current_user):
     welcome_label = tkinter.Label(frame, text=f"Welcome {user_first_name}!", font=("Helvetica", 16), bg="#e6ffe6")  # Set label background color
     welcome_label.pack()
 
-   
+    # Delivery Date Selection
+    delivery_label = tkinter.Label(frame, text="Select Delivery Date:", font=("Helvetica", 12), bg="#e6ffe6")
+    delivery_label.pack()
+
+    # Calendar for selecting delivery date
+    cal = Calendar(frame, selectmode="day", year=datetime.datetime.today().year, month=datetime.datetime.today().month,
+                   day=datetime.datetime.today().day, background="lightyellow", foreground="black", selectbackground="lightblue")
+    cal.pack()
+
+    # Highlight delivery dates
+    highlight_dates(cal)
 
     # Products section
     products_frame = tkinter.Frame(frame, bg="#e6ffe6")  # Set frame background color
@@ -388,6 +412,9 @@ def order_cart_screen(current_user):
     # Adjust padding and spacing for a better appearance
     frame.grid_rowconfigure((0, 1, 2), weight=1)
     frame.grid_columnconfigure((0, 1), weight=1)
+
+
+
 
 # Function to search for a product
 def search_product(keyword):
