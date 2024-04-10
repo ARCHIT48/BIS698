@@ -645,6 +645,15 @@ def view_cart(selected_delivery_date):
     def checkout():
         global cart_items
 
+        # Calculate total order amount
+        total_amount = sum(item[2] * item[3] for item in cart_items)
+
+        # Check if the total amount is greater than $50
+        if total_amount >= 50:
+            delivery_fee = 0
+        else:
+            delivery_fee = 10
+
         # Close the current cart window
         cart_window.destroy()
 
@@ -723,12 +732,19 @@ def view_cart(selected_delivery_date):
                 messagebox.showerror("Error", "Please enter a valid zip code for MOUNT Pleasant.")
                 return
 
+            # Calculate total order amount including delivery fee
+            total_amount_with_delivery_fee = total_amount + delivery_fee
+
             # Generate a unique order number (simulation)
             uuid_str = str(uuid.uuid4())
             order_id = int(uuid_str.replace("-", "")[:4])
 
-            # Display the order number to the user
-            messagebox.showinfo("Order Placed", f"Your order has been placed successfully!\nOrder Number: {order_id}")
+            # Display the order details to the user
+            messagebox.showinfo("Order Placed", f"Your order has been placed successfully!\n"
+                                                 f"Order Number: {order_id}\n"
+                                                 f"Total Amount: ${total_amount}\n"
+                                                 f"Delivery Fee: ${delivery_fee}\n"
+                                                 f"Total Amount with Delivery Fee: ${total_amount_with_delivery_fee}")
 
             # Close the payment and checkout window
             checkout_window.destroy()
@@ -768,17 +784,30 @@ def view_cart(selected_delivery_date):
             increase_button = ttk.Button(frame, text="Increase", command=lambda p_id=product_id, ql=quantity_label: increase_quantity(p_id, ql))
             increase_button.grid(row=index+1, column=3, padx=5)
 
-        # Display selected delivery date
-        delivery_label = ttk.Label(frame, text=f"Selected Delivery Date: {selected_delivery_date}", font=("Helvetica", 12))
-        delivery_label.grid(row=len(cart_items)+1, column=0, columnspan=4, pady=10)
+        # Selected delivery date label
+        delivery_label = ttk.Label(frame, text=f"Selected Delivery Date: {selected_delivery_date}")
+        delivery_label.grid(row=len(cart_items)+1, columnspan=4, pady=10)
+
+        # Calculate total order amount
+        total_amount = sum(item[2] * item[3] for item in cart_items)
+
+        # Check if the total amount is greater than $50
+        if total_amount >= 50:
+            total_label_text = f"Total Amount: ${total_amount}"
+        else:
+            total_label_text = f"Total Amount: ${total_amount} (Includes $10 delivery fee)"
+
+        # Total amount label
+        total_label = ttk.Label(frame, text=total_label_text)
+        total_label.grid(row=len(cart_items)+2, columnspan=4, pady=10)
 
         # Cancel order button
         cancel_button = ttk.Button(frame, text="Cancel Order", command=cancel_order)
-        cancel_button.grid(row=len(cart_items)+2, column=0, columnspan=2, pady=10)
+        cancel_button.grid(row=len(cart_items)+3, column=0, columnspan=2, pady=10)
 
         # Checkout button
         checkout_button = ttk.Button(frame, text="Checkout", command=checkout)
-        checkout_button.grid(row=len(cart_items)+2, column=2, columnspan=2, pady=10)
+        checkout_button.grid(row=len(cart_items)+3, column=2, columnspan=2, pady=10)
 
     cart_window = tkinter.Toplevel(order_cart_window)
     cart_window.title("View Cart")
@@ -788,6 +817,7 @@ def view_cart(selected_delivery_date):
     frame.pack()
 
     update_cart_display()
+
 
 # function to place order
 def place_order():
