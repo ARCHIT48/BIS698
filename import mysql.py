@@ -405,9 +405,13 @@ def order_cart_screen(current_user):
                                                  font=("Helvetica", 12), bg="#e6ffe6", command=select_delivery)
             delivery_radio.pack(anchor=tkinter.W)
 
-    # Add a button to view the cart in the order cart screen
-    view_cart_button = tkinter.Button(frame, text="View Cart", command=view_cart)
+
+    
+    
+   # Add a button to view the cart in the order cart screen
+    view_cart_button = tkinter.Button(frame, text="View Cart", command=lambda: view_cart(delivery_var.get()))
     view_cart_button.pack()  # Adjust the positioning as needed
+
 
     # Adjust padding and spacing for a better appearance
     frame.grid_rowconfigure((0, 1, 2), weight=1)
@@ -596,7 +600,7 @@ def edit_profile(current_user):
 
 
 # Function to view the cart
-def view_cart():
+def view_cart(selected_delivery_date):
     global cart_items
 
     def reduce_quantity(product_id, quantity_label):
@@ -723,7 +727,6 @@ def view_cart():
             uuid_str = str(uuid.uuid4())
             order_id = int(uuid_str.replace("-", "")[:4])
 
-            
             # Display the order number to the user
             messagebox.showinfo("Order Placed", f"Your order has been placed successfully!\nOrder Number: {order_id}")
 
@@ -765,13 +768,17 @@ def view_cart():
             increase_button = ttk.Button(frame, text="Increase", command=lambda p_id=product_id, ql=quantity_label: increase_quantity(p_id, ql))
             increase_button.grid(row=index+1, column=3, padx=5)
 
+        # Display selected delivery date
+        delivery_label = ttk.Label(frame, text=f"Selected Delivery Date: {selected_delivery_date}", font=("Helvetica", 12))
+        delivery_label.grid(row=len(cart_items)+1, column=0, columnspan=4, pady=10)
+
         # Cancel order button
         cancel_button = ttk.Button(frame, text="Cancel Order", command=cancel_order)
-        cancel_button.grid(row=len(cart_items)+1, column=0, columnspan=2, pady=10)
+        cancel_button.grid(row=len(cart_items)+2, column=0, columnspan=2, pady=10)
 
         # Checkout button
         checkout_button = ttk.Button(frame, text="Checkout", command=checkout)
-        checkout_button.grid(row=len(cart_items)+1, column=2, columnspan=2, pady=10)
+        checkout_button.grid(row=len(cart_items)+2, column=2, columnspan=2, pady=10)
 
     cart_window = tkinter.Toplevel(order_cart_window)
     cart_window.title("View Cart")
@@ -781,7 +788,6 @@ def view_cart():
     frame.pack()
 
     update_cart_display()
-
 
 # function to place order
 def place_order():
