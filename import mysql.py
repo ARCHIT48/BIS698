@@ -257,12 +257,6 @@ def order_cart_screen(current_user):
                 delivery_dates.append(current_date)
         return delivery_dates
     
-    # Function to highlight delivery dates in the calendar
-    def highlight_dates(cal):
-        delivery_dates = select_delivery_dates()
-        for date in delivery_dates:
-            cal.tag_config(str(date), background="lightblue")
-    
     # Fetch the first name of the user from the database
     try:
         cursor = connection.cursor()
@@ -295,26 +289,45 @@ def order_cart_screen(current_user):
     frame = tkinter.Frame(order_cart_window, bg="#e6ffe6")  # Set frame background color
     frame.pack(fill=tkinter.BOTH, expand=True)
 
-    # Add widgets for the order cart screen
-    # Label for the title
-    title_label = tkinter.Label(frame, text="Order Cart", font=("Helvetica", 24, "bold"), bg="#e6ffe6")  # Set label background color
-    title_label.pack(pady=20)
+    # Filter section
+    filter_frame = tkinter.Frame(frame, bg="#e6ffe6")  # Set frame background color
+    filter_frame.pack(side=tkinter.LEFT, padx=20, pady=10, fill=tkinter.BOTH)
 
-    # Welcome message with user's first name
-    welcome_label = tkinter.Label(frame, text=f"Welcome {user_first_name}!", font=("Helvetica", 16), bg="#e6ffe6")  # Set label background color
-    welcome_label.pack()
+    filter_label = tkinter.Label(filter_frame, text="Filter", font=("Helvetica", 16, "bold"), bg="#e6ffe6")  # Set label background color
+    filter_label.pack()
 
-    # Delivery Date Selection
-    delivery_label = tkinter.Label(frame, text="Select Delivery Date:", font=("Helvetica", 12), bg="#e6ffe6")
-    delivery_label.pack()
+    # Product Search
+    search_label = tkinter.Label(filter_frame, text="Search Product:", bg="#e6ffe6", font=("Helvetica", 12))  # Set label background color and font
+    search_label.pack()
+    search_entry = tkinter.Entry(filter_frame, width=20, font=("Helvetica", 10))  # Set entry width and font
+    search_entry.pack()
+    search_button = tkinter.Button(filter_frame, text="Search", bg="#99ff99", font=("Helvetica", 10, "bold"),  # Set button background color and font
+                                   command=lambda: search_product(search_entry.get()))
+    search_button.pack()
 
-    # Calendar for selecting delivery date
-    cal = Calendar(frame, selectmode="day", year=datetime.datetime.today().year, month=datetime.datetime.today().month,
-                   day=datetime.datetime.today().day, background="lightyellow", foreground="black", selectbackground="lightblue")
-    cal.pack()
+    # Product Filter
+    price_range_label = tkinter.Label(filter_frame, text="Price Range:", bg="#e6ffe6", font=("Helvetica", 12))  # Set label background color and font
+    price_range_label.pack()
 
-    # Highlight delivery dates
-    highlight_dates(cal)
+    # Frame to organize minimum and maximum price fields
+    price_entry_frame = tkinter.Frame(filter_frame, bg="#e6ffe6")
+    price_entry_frame.pack()
+
+    # Minimum price entry
+    min_price_label = tkinter.Label(price_entry_frame, text="Min:", bg="#e6ffe6", font=("Helvetica", 10))  # Set label background color and font
+    min_price_label.pack(side=tkinter.LEFT)
+    price_from_entry = tkinter.Entry(price_entry_frame, width=10, font=("Helvetica", 10))  # Set entry width and font
+    price_from_entry.pack(side=tkinter.LEFT, padx=(0, 5))
+
+    # Maximum price entry
+    max_price_label = tkinter.Label(price_entry_frame, text="Max:", bg="#e6ffe6", font=("Helvetica", 10))  # Set label background color and font
+    max_price_label.pack(side=tkinter.LEFT)
+    price_to_entry = tkinter.Entry(price_entry_frame, width=10, font=("Helvetica", 10))  # Set entry width and font
+    price_to_entry.pack(side=tkinter.LEFT)
+
+    filter_button = tkinter.Button(filter_frame, text="Apply Filter", bg="#99ff99", font=("Helvetica", 10, "bold"),
+                                                                      command=lambda: filter_products(price_from_entry.get(), price_to_entry.get()))
+    filter_button.pack()
 
     # Products section
     products_frame = tkinter.Frame(frame, bg="#e6ffe6")  # Set frame background color
@@ -365,45 +378,25 @@ def order_cart_screen(current_user):
         logging.error("Error occurred while fetching products: %s", error)
         messagebox.showerror("Error", "Error occurred while fetching products. Please try again.")
 
-    # Filter section
-    filter_frame = tkinter.Frame(frame, bg="#e6ffe6")  # Set frame background color
-    filter_frame.pack(side=tkinter.RIGHT, padx=20, pady=10, fill=tkinter.BOTH, expand=True)
+    # Delivery Date Selection
+    delivery_frame = tkinter.Frame(frame, bg="#e6ffe6")  # Set frame background color
+    delivery_frame.pack(side=tkinter.RIGHT, padx=20, pady=10, fill=tkinter.BOTH)
 
-    filter_label = tkinter.Label(filter_frame, text="Filter", font=("Helvetica", 16, "bold"), bg="#e6ffe6")  # Set label background color
-    filter_label.pack()
+    delivery_label = tkinter.Label(delivery_frame, text="Select Delivery Date:", font=("Helvetica", 16, "bold"), bg="#e6ffe6")
+    delivery_label.pack()
 
-    # Product Search
-    search_label = tkinter.Label(filter_frame, text="Search Product:", bg="#e6ffe6", font=("Helvetica", 12))  # Set label background color and font
-    search_label.pack()
-    search_entry = tkinter.Entry(filter_frame, width=20, font=("Helvetica", 10))  # Set entry width and font
-    search_entry.pack()
-    search_button = tkinter.Button(filter_frame, text="Search", bg="#99ff99", font=("Helvetica", 10, "bold"),  # Set button background color and font
-                                   command=lambda: search_product(search_entry.get()))
-    search_button.pack()
+    delivery_dates = select_delivery_dates()[:4]  # Get the next 4 delivery dates
 
-    # Product Filter
-    price_range_label = tkinter.Label(filter_frame, text="Price Range:", bg="#e6ffe6", font=("Helvetica", 12))  # Set label background color and font
-    price_range_label.pack()
-
-    # Frame to organize minimum and maximum price fields
-    price_entry_frame = tkinter.Frame(filter_frame, bg="#e6ffe6")
-    price_entry_frame.pack()
-
-    # Minimum price entry
-    min_price_label = tkinter.Label(price_entry_frame, text="Min:", bg="#e6ffe6", font=("Helvetica", 10))  # Set label background color and font
-    min_price_label.pack(side=tkinter.LEFT)
-    price_from_entry = tkinter.Entry(price_entry_frame, width=10, font=("Helvetica", 10))  # Set entry width and font
-    price_from_entry.pack(side=tkinter.LEFT, padx=(0, 5))
-
-    # Maximum price entry
-    max_price_label = tkinter.Label(price_entry_frame, text="Max:", bg="#e6ffe6", font=("Helvetica", 10))  # Set label background color and font
-    max_price_label.pack(side=tkinter.LEFT)
-    price_to_entry = tkinter.Entry(price_entry_frame, width=10, font=("Helvetica", 10))  # Set entry width and font
-    price_to_entry.pack(side=tkinter.LEFT)
-
-    filter_button = tkinter.Button(filter_frame, text="Apply Filter", bg="#99ff99", font=("Helvetica", 10, "bold"),
-                                                                      command=lambda: filter_products(price_from_entry.get(), price_to_entry.get()))
-    filter_button.pack()
+    delivery_var = tkinter.StringVar()  # Variable to hold selected delivery date
+    
+    # Function to handle radio button selection
+    def select_delivery():
+        print(delivery_var.get())  # Print selected delivery date
+    
+    for date in delivery_dates:
+        delivery_radio = tkinter.Radiobutton(delivery_frame, text=date.strftime('%Y-%m-%d'), variable=delivery_var, value=date.strftime('%Y-%m-%d'),
+                                             font=("Helvetica", 12), bg="#e6ffe6", command=select_delivery)
+        delivery_radio.pack(anchor=tkinter.W)
 
     # Add a button to view the cart in the order cart screen
     view_cart_button = tkinter.Button(frame, text="View Cart", command=view_cart)
