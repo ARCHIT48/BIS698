@@ -5,8 +5,8 @@ import mysql.connector
 import logging
 import re
 import uuid
-from datetime import datetime
 import datetime
+from datetime import datetime
 from tkcalendar import Calendar
 
 # Define the connection variable in the global scope
@@ -49,6 +49,8 @@ def enter_app():
 def clear_signin_entries():
     userid_entry.delete(0, tkinter.END)
     password_entry.delete(0, tkinter.END)
+
+
 
 def userdetails():
     # Create a new window for sign-up
@@ -113,7 +115,7 @@ def userdetails():
     # Function to set the selected date in the Date of Birth entry
     def set_date():
         dob_entry.delete(0, tkinter.END)
-        dob_entry.insert(0, cal.get_date())
+        dob_entry.insert(0, cat.get_date())
 
     # Calendar button for selecting DOB
     def show_calendar():
@@ -161,7 +163,7 @@ def userdetails():
         last_name = last_name_entry.get()
         email = email_entry.get()
         phone = phone_entry.get()
-        dob = dob_entry.get()
+        dob_str = dob_entry.get()
         state = state_combobox.get()  # Get selected state
         user_id = user_id_entry.get()
         password = password_entry.get()
@@ -178,15 +180,23 @@ def userdetails():
             return
 
         # Validate date format
+        dob_parts = dob_str.split("/")
+        if len(dob_parts) != 3:
+            messagebox.showerror("Error", "Invalid date format. Please use MM/DD/YYYY.")
+            return
+
         try:
-            dob_formatted = datetime.strptime(dob, "%m/%d/%Y").strftime("%Y-%m-%d")
+            month = int(dob_parts[0])
+            day = int(dob_parts[1])
+            year = int(dob_parts[2])
+            dob_datetime = datetime(year, month, day)
+            dob_formatted = dob_datetime.strftime("%Y-%m-%d")
         except ValueError:
             messagebox.showerror("Error", "Invalid date format. Please use MM/DD/YYYY.")
             return
 
         # Validate age
         today = datetime.today()
-        dob_datetime = datetime.strptime(dob, "%m/%d/%Y")
         age = today.year - dob_datetime.year - ((today.month, today.day) < (dob_datetime.month, dob_datetime.day))
         if age < 18:
             messagebox.showerror("Error", "You must be at least 18 years old to sign up.")
@@ -227,6 +237,7 @@ def userdetails():
             logging.error("Error occurred while adding user: %s", error)
             messagebox.showerror("Error", "Error occurred while adding user. Please try again.")
 
+    
     # Sign-up button
     btnSignUp = tkinter.Button(frame, width=10, text="Sign Up", command=add_user)
     btnSignUp.grid(row=1, column=0, padx=20, pady=10)
@@ -234,6 +245,8 @@ def userdetails():
     # Cancel button
     btnCancel = tkinter.Button(frame, width=10, text="Cancel", command=signup_window.destroy)
     btnCancel.grid(row=1, column=1, padx=20, pady=10)
+
+
 
 def login():
     # Authenticate user (e.g., by checking credentials against database)
