@@ -119,7 +119,7 @@ def userdetails():
     retype_password_entry.grid(row=8, column=1)
     def validate_email(email):
         # Regular expression for email validation
-        pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.(com|org|net|gov|edu)$'
         return re.match(pattern, email)
     # Function to add a new user to the database
     def add_user():
