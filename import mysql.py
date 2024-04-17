@@ -7,6 +7,7 @@ import re
 import uuid
 import datetime
 from datetime import datetime
+import datetime
 from tkcalendar import Calendar
 # Define the connection variable in the global scope
 connection = None
@@ -152,14 +153,14 @@ def userdetails():
             month = int(dob_parts[0])
             day = int(dob_parts[1])
             year = int(dob_parts[2])
-            dob_datetime = datetime(year, month, day)
+            dob_datetime = datetime.datetime(year, month, day)
             dob_formatted = dob_datetime.strftime("%Y-%m-%d")
         except ValueError:
             messagebox.showerror("Error", "Invalid date format. Please use MM/DD/YYYY.")
             return
 
         # Validate age
-        today = datetime.today()
+        today = datetime.datetime.today()
         age = today.year - dob_datetime.year - ((today.month, today.day) < (dob_datetime.month, dob_datetime.day))
         if age < 18:
             messagebox.showerror("Error", "You must be at least 18 years old to sign up.")
@@ -200,17 +201,14 @@ def userdetails():
             logging.error("Error occurred while adding user: %s", error)
             messagebox.showerror("Error", "Error occurred while adding user. Please try again.")
 
+
     
     # Sign-up button
     btnSignUp = tkinter.Button(frame, width=10, text="Sign Up", command=add_user)
     btnSignUp.grid(row=1, column=0, padx=20, pady=10)
-
     # Cancel button
     btnCancel = tkinter.Button(frame, width=10, text="Cancel", command=signup_window.destroy)
     btnCancel.grid(row=1, column=1, padx=20, pady=10)
-
-
-
 def login():
     # Authenticate user (e.g., by checking credentials against database)
     # If authentication is successful, set the current_user variable
